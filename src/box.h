@@ -71,5 +71,7 @@ int box_free(Box* box);
 
 // Takes in a Box pointer and attempts to draw it to the terminal. Returns 0 on
 // success and a non-zero value on error.
+// NOTE: it's best to ensure the width of the box is long enough to hold the
+// title of the box (if it has one). Otherwise, the print may not look ideal.
 int box_print(Box* box);
 

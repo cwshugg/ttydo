@@ -8,11 +8,13 @@
 
 
 // ====================== Helper Function Prototypes ======================= //
-char** make_box_lines(uint16_t width, uint16_t height);
+char** make_box_lines(uint16_t width, uint16_t height, char* title);
 void free_box_lines(char** lines);
 char** abort_and_free_box_lines(char** lines, int length);
 void fill_box_line(char** line, int width, char* left_edge,
                    char* middle, char* right_edge);
+int fill_box_line_with_title(char** line, int width, char* left_edge,
+                             char* middle, char* right_edge, char* title);
 
 
 // ======= main ======= //
@@ -20,7 +22,7 @@ int main()
 {
 
     printf("box test:\n");
-    Box* b1 = box_new(0, 0, "Title Test", "This is the box's text.");
+    Box* b1 = box_new(64, 4, "TITLE OF THE BOX", "This is the box's text.");
     box_print(b1);
     box_free(b1);
 
@@ -77,10 +79,15 @@ int box_print(Box* box)
     if (!box) { return 1; }
 
     // invoke a helper function to generate an array of lines to print
-    char** lines = make_box_lines(box->width, box->height);
-    if (!lines) { return 1; }
+    char** lines = make_box_lines(box->width, box->height, box->title);
+    if (!lines)
+    {
+        fprintf(stdout, "Error: could not print %dx%d box!\n",
+                box->width, box->height);
+        return 1;
+    }
 
-    // print each line to STDOUT
+    // print each line to STDOUT (iterate until NULL is reached)
     for (int i = 0; i < box->height; i++)
     { fprintf(stdout, "%s\n", lines[i]); }
 
@@ -94,15 +101,17 @@ int box_print(Box* box)
 // =========================== Helper Functions ============================ //
 // Helper function that takes in a width and height, and generates a series of
 // strings, each representing a single line in the box. The number of lines
-// returned is equal to the 'height' parameter.
+// returned is equal to the 'height' parameter. A title string is also taken
+// in - if it's not NULL, and the width of the box is long enough to print the
+// title, the title will be printed on the top line of the box.
 // If an error occurs, or allocation fails, NULL is returned.
 // NOTE: if the width or height is below the minimum value (box.h's
-// BOX_MIN_WIDTH/BOX_MIN_HEIGHT), they'll be set to the minimum values.
-char** make_box_lines(uint16_t width, uint16_t height)
+// BOX_MIN_WIDTH/BOX_MIN_HEIGHT), NULL is returned.
+char** make_box_lines(uint16_t width, uint16_t height, char* title)
 {
     // if width or height is zero, modify it
-    if (width < BOX_MIN_WIDTH) { width = BOX_MIN_WIDTH; }
-    if (width < BOX_MIN_HEIGHT) { width = BOX_MIN_HEIGHT; }
+    if (width < BOX_MIN_WIDTH || height < BOX_MIN_HEIGHT)
+    { return NULL; }
 
     // allocate an array of strings to represent each line (the extra slot at
     // the end will be NULL.
@@ -117,7 +126,10 @@ char** make_box_lines(uint16_t width, uint16_t height)
     lines[0] = calloc(line_width + 1, sizeof(char));
     /* calloc check */ if (!lines[0])
     /* calloc check */ { return abort_and_free_box_lines(lines, 0); }
-    fill_box_line(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER);
+    // attempt to fill the top line with the title, if it's long enough. If it
+    // fails, fill the line as normal (without the title)
+    if (fill_box_line_with_title(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER, title))
+    { fill_box_line(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER); }
 
     // -------- Creating middle lines -------- //
     // iterate through indexes 1..(height - 2) and create middle strings
@@ -153,10 +165,43 @@ void fill_box_line(char** line, int width, char* left_edge,
     // write the left edge
     strncat(*line, left_edge, strlen(left_edge));
     // write the middle characters
+    int middle_length = strlen(middle);
     for (int i = 0; i < width - 2; i++)
-    { strncat(*line, middle, strlen(middle)); }
+    { strncat(*line, middle, middle_length); }
     // write the right edge
     strncat(*line, right_edge, strlen(right_edge));
+}
+
+// Helper function that works the same way as 'fill_box_line', but it attempts
+// to add a title to the left side of the line. If the width of the line isn't
+// long enough to fit the line, nothing is written and a non-zero value is
+// returned. Otherwise, 'line' is filled and 0 is returned.
+int fill_box_line_with_title(char** line, int width, char* left_edge,
+                             char* middle, char* right_edge, char* title)
+{
+    // if the title is NULL, return 1
+    if (!title) { return 1; }
+
+    // check for the correct length
+    int title_length = strlen(title);
+    if (width - 4 < title_length) { return 1; }
+
+    // otherwise, fill the string
+    strncat(*line, BOX_TL_CORNER, strlen(BOX_TL_CORNER));
+    strncat(*line, BOX_H_LINE, strlen(BOX_H_LINE));
+    strncat(*line, title, title_length);
+    int current_length = title_length + 2;
+
+    // fill the remaining spots (except the last) with the middle string
+    int middle_length = strlen(middle);
+    for (int i = current_length; i < width - 1; i++)
+    { strncat(*line, middle, middle_length); }
+
+    // fill the final spot with the right edge string
+    strncat(*line, right_edge, strlen(right_edge));
+
+    // success - return 0
+    return 0;
 }
 
 // Takes in a char** returned from 'make_box_lines' and attempts to free each
@@ -189,4 +234,5 @@ char** abort_and_free_box_lines(char** lines, int length)
     // return NULL
     return NULL;
 }
+
 
