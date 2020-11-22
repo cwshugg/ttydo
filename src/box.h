@@ -69,18 +69,3 @@ int box_free(Box* box);
 // success and a non-zero value on error.
 int box_print(Box* box);
 
-// ========================= Box-Drawing Functions ========================= //
-// Takes in a width, height, horiztonal offset (number of characters away from
-// the left side), and vertical offset (number of lines down from the current
-// position), and draws a box.
-// Returns 0 on success, and a non-zero value on failure.
-int box_draw(int h_offset, int v_offset, int width, int height);
-
-// Takes in box dimension parameters AND the title of the box. The title is
-// drawn on the top side of the box, and is left-justified.
-// Returns 0 on success, and a non-zero value on failure.
-int box_draw_with_title(int h_offset, int v_offset, int width, int height, char* title);
-
-
-
-
