@@ -31,6 +31,8 @@
 #define BOX_CHARACTER_SIZE 8            // number of bytes for each character
 #define BOX_MIN_WIDTH 2                 // the minimum width a box can be
 #define BOX_MIN_HEIGHT 2                // the minimum height a box can be
+// text-related constants
+#define BOX_TEXT_RUNOFF "..."
 
 // ============================== Box Struct =============================== //
 // Text alignment enum

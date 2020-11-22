@@ -8,28 +8,34 @@
 
 
 // ====================== Helper Function Prototypes ======================= //
-char** make_box_lines(uint16_t width, uint16_t height, char* title);
+char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text);
 void free_string_array_null_terminated(char** lines);
 char** free_string_array(char** lines, int length);
 void fill_box_line(char** line, int width, char* left_edge,
                    char* middle, char* right_edge);
 int fill_box_line_with_title(char** line, int width, char* left_edge,
                              char* middle, char* right_edge, char* title);
+int fill_box_line_with_text(char** line, int width, char* left_edge,
+                            char* middle, char* right_edge, char* text);
 char** split_text_by_newline(char* text);
 
 // ======= main ======= //
 int main()
 {
-    printf("box test:\n");
+    printf("box test 1:\n");
     Box* b1 = box_new(64, 4, "[TITLE OF THE BOX]", "Line 1\nLine 2\nLine 3");
     box_print(b1);
     box_free(b1);
-
-    char** chars = split_text_by_newline("hello\nthere\ndude\nwhat's\nup");
-    char** x = chars;
-    while (*x != NULL)
-    { printf("Line: \"%s\"\n", *(x++)); }
-    free_string_array_null_terminated(chars);
+    
+    printf("box test 2:\n");
+    Box* b2 = box_new(16, 4, "[TITLE OF THE BOX]", "0123456789abcdef\nLine 2\nLine 3");
+    box_print(b2);
+    box_free(b2);
+    
+    printf("box test 3:\n");
+    Box* b3 = box_new(24, 8, "[TITLE OF THE BOX]", "0123456789abcdefZZZZZZZZ\nLine 2\nLine 3");
+    box_print(b3);
+    box_free(b3);
 
     return 0;    
 }
@@ -84,7 +90,7 @@ int box_print(Box* box)
     if (!box) { return 1; }
 
     // invoke a helper function to generate an array of lines to print
-    char** lines = make_box_lines(box->width, box->height, box->title);
+    char** lines = make_box_lines(box->width, box->height, box->title, box->text);
     if (!lines)
     {
         fprintf(stdout, "Error: could not print %dx%d box!\n",
@@ -112,7 +118,7 @@ int box_print(Box* box)
 // If an error occurs, or allocation fails, NULL is returned.
 // NOTE: if the width or height is below the minimum value (box.h's
 // BOX_MIN_WIDTH/BOX_MIN_HEIGHT), NULL is returned.
-char** make_box_lines(uint16_t width, uint16_t height, char* title)
+char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
 {
     // if width or height is zero, modify it
     if (width < BOX_MIN_WIDTH || height < BOX_MIN_HEIGHT)
@@ -136,14 +142,24 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title)
     { fill_box_line(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER); }
 
     // -------- Creating middle lines -------- //
+    // attempt to split the box's text into linse. If it fails, free and return
+    char** text_lines = split_text_by_newline(text);
+    if (!text_lines) { return free_string_array(lines, 1); }
+    char** current_text_line = text_lines;
     // iterate through indexes 1..(height - 2) and create middle strings
     for (int i = 1; i < height - 1; i++)
     {
         lines[i] = calloc(line_width + 1, sizeof(char));
         /* calloc check */ if (!lines[i])
         /* calloc check */ { return free_string_array(lines, i); }
-        fill_box_line(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE);
+
+        // if we have a line of text to use for this line, use it. Otherwise,
+        // fill the line as normal (with no text)
+        if (fill_box_line_with_text(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE, *(current_text_line++)))
+        { fill_box_line(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE); }
     }
+    // free the text linse
+    free_string_array_null_terminated(text_lines);
 
     // --------- Creating last line ---------- //    
     // create the last line: it will have corners and horizontal lines
@@ -205,6 +221,45 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     strncat(*line, right_edge, strlen(right_edge));
 
     // success - return 0
+    return 0;
+}
+
+// Helper function that works the same way as 'fill_box_line', but it attempts
+// to add left-justified text to the string. If the width of the line isn't
+// long enough to hold the entire text, as much text is written as possible.
+// On failure to write, a non-zero value is returned. On success, 0 is returned
+int fill_box_line_with_text(char** line, int width, char* left_edge,
+                             char* middle, char* right_edge, char* text)
+{
+    // if the text is NULL, return 1
+    if (!text) { return 1; }
+
+    // determine how much room there is for the text
+    int text_length = strlen(text);
+    int runoff_length = strlen(BOX_TEXT_RUNOFF);
+    int available_length = width - runoff_length + 1/*- 2*/;
+    int copied_text_length = text_length;
+    if (text_length > available_length) { copied_text_length = available_length; }
+
+    // make a local copy of the text of the appropriate length
+    char text_copy[copied_text_length + 1];
+    strncpy(text_copy, text, copied_text_length);
+    // if we couldn't fit all the text, add the 'runoff indicator' to the end
+    if (text_length > available_length)
+    { strncpy(text_copy + copied_text_length - runoff_length, BOX_TEXT_RUNOFF, runoff_length); }
+
+    // write the left edge
+    strncat(*line, left_edge, strlen(left_edge));
+
+    // write the middle characters
+    strncat(*line, text_copy, copied_text_length);
+    int middle_length = strlen(middle);
+    for (int i = 0; i < width - 2 - copied_text_length; i++)
+    { strncat(*line, middle, middle_length); }
+
+    // write the right edge
+    strncat(*line, right_edge, strlen(right_edge));
+
     return 0;
 }
 
