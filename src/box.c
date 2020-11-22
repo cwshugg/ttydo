@@ -19,27 +19,6 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
                             char* middle, char* right_edge, char* text);
 char** split_text_by_newline(char* text);
 
-// ======= main ======= //
-int main()
-{
-    printf("box test 1:\n");
-    Box* b1 = box_new(64, 4, "[TITLE OF THE BOX]", "Line 1\nLine 2\nLine 3");
-    box_print(b1);
-    box_free(b1);
-    
-    printf("box test 2:\n");
-    Box* b2 = box_new(16, 4, "[TITLE OF THE BOX]", "0123456789abcdef\nLine 2\nLine 3");
-    box_print(b2);
-    box_free(b2);
-    
-    printf("box test 3:\n");
-    Box* b3 = box_new(24, 8, "[TITLE OF THE BOX]", "0123456789abcdefZZZZZZZZ\nLine 2\nLine 3");
-    box_print(b3);
-    box_free(b3);
-
-    return 0;    
-}
-
 
 // ============================== Box Struct =============================== //
 Box* box_new(uint16_t b_width, uint16_t b_height, char* b_title, char* b_text)
@@ -142,10 +121,16 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
     { fill_box_line(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER); }
 
     // -------- Creating middle lines -------- //
-    // attempt to split the box's text into linse. If it fails, free and return
-    char** text_lines = split_text_by_newline(text);
-    if (!text_lines) { return free_string_array(lines, 1); }
-    char** current_text_line = text_lines;
+    // attempt to split the box's text into lines. If it fails, free and return
+    int has_text = text != NULL;
+    char** text_lines = NULL;
+    char** current_text_line = NULL;
+    if (has_text)
+    {
+        text_lines = split_text_by_newline(text);
+        if (!text_lines) { return free_string_array(lines, 1); }
+        current_text_line = text_lines;
+    }
     // iterate through indexes 1..(height - 2) and create middle strings
     for (int i = 1; i < height - 1; i++)
     {
@@ -153,13 +138,20 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
         /* calloc check */ if (!lines[i])
         /* calloc check */ { return free_string_array(lines, i); }
 
-        // if we have a line of text to use for this line, use it. Otherwise,
-        // fill the line as normal (with no text)
-        if (fill_box_line_with_text(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE, *(current_text_line++)))
+        // if we have a line of text to use for this line, attempt to use it
+        int text_fill_failed = 1;
+        if (has_text && *current_text_line)
+        {
+            text_fill_failed = fill_box_line_with_text(&lines[i], width, BOX_V_LINE,
+                                                       " ", BOX_V_LINE, *(current_text_line++));
+        }
+        // if the text-fill failed, fill the line as normal
+        if (text_fill_failed)
         { fill_box_line(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE); }
     }
-    // free the text linse
-    free_string_array_null_terminated(text_lines);
+    // free the text lines
+    if (has_text)
+    { free_string_array_null_terminated(text_lines); }
 
     // --------- Creating last line ---------- //    
     // create the last line: it will have corners and horizontal lines
@@ -336,4 +328,41 @@ char** free_string_array(char** lines, int length)
 
     // return NULL
     return NULL;
+}
+
+
+// ================================ Testing ================================ //
+int main()
+{
+    printf("box with no title/text:\n");
+    Box* b1 = box_new(64, 4, NULL, NULL);
+    box_print(b1);
+    box_free(b1);
+    
+    printf("box with title:\n");
+    Box* b2 = box_new(64, 4, " title testing ", NULL);
+    box_print(b2);
+    box_free(b2);
+    
+    printf("box with title and text:\n");
+    Box* b3 = box_new(64, 4, " title testing ", "this is the box's text. Just one line.");
+    box_print(b3);
+    box_free(b3);
+    
+    printf("box with title and text that's too long:\n");
+    Box* b4 = box_new(32, 4, " title testing ", "this box has text that is too long for it.");
+    box_print(b4);
+    box_free(b4);
+    
+    printf("box with title and just enough lines of text:\n");
+    Box* b5 = box_new(48, 4, " title testing ", "this is the first line of text\nthis is the second");
+    box_print(b5);
+    box_free(b5);
+    
+    printf("box with title and too many lines of text:\n");
+    Box* b6 = box_new(64, 4, " title testing ", "text line 1\ntext line 2\ntext line 3");
+    box_print(b6);
+    box_free(b6);
+
+    return 0;    
 }

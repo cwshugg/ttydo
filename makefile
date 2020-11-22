@@ -11,6 +11,9 @@ default: all
 all:
 	$(CC) $(CC_ARGS) $(SOURCE_DIR)/*.c -o ttydo
 
+all-debug:
+	$(CC) $(CC_ARGS) -g $(SOURCE_DIR)/*.c -o ttydo
+
 clean:
 	rm -f ttydo
 
