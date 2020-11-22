@@ -9,22 +9,27 @@
 
 // ====================== Helper Function Prototypes ======================= //
 char** make_box_lines(uint16_t width, uint16_t height, char* title);
-void free_box_lines(char** lines);
-char** abort_and_free_box_lines(char** lines, int length);
+void free_string_array_null_terminated(char** lines);
+char** free_string_array(char** lines, int length);
 void fill_box_line(char** line, int width, char* left_edge,
                    char* middle, char* right_edge);
 int fill_box_line_with_title(char** line, int width, char* left_edge,
                              char* middle, char* right_edge, char* title);
-
+char** split_text_by_newline(char* text);
 
 // ======= main ======= //
 int main()
 {
-
     printf("box test:\n");
-    Box* b1 = box_new(64, 4, "TITLE OF THE BOX", "This is the box's text.");
+    Box* b1 = box_new(64, 4, "[TITLE OF THE BOX]", "Line 1\nLine 2\nLine 3");
     box_print(b1);
     box_free(b1);
+
+    char** chars = split_text_by_newline("hello\nthere\ndude\nwhat's\nup");
+    char** x = chars;
+    while (*x != NULL)
+    { printf("Line: \"%s\"\n", *(x++)); }
+    free_string_array_null_terminated(chars);
 
     return 0;    
 }
@@ -92,7 +97,7 @@ int box_print(Box* box)
     { fprintf(stdout, "%s\n", lines[i]); }
 
     // free the allocated memory
-    free_box_lines(lines);
+    free_string_array_null_terminated(lines);
 
     return 0;
 }
@@ -116,8 +121,7 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title)
     // allocate an array of strings to represent each line (the extra slot at
     // the end will be NULL.
     char** lines = calloc(height + 1, sizeof(char*));
-    /* calloc check */ if (!lines)
-    /* calloc check */ { return NULL; }
+    /* calloc check */ if (!lines) { return NULL; }
     lines[height] = NULL;
     int line_width = width * BOX_CHARACTER_SIZE;
     
@@ -125,7 +129,7 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title)
     // create the first line: it will have corners and horizontal lines
     lines[0] = calloc(line_width + 1, sizeof(char));
     /* calloc check */ if (!lines[0])
-    /* calloc check */ { return abort_and_free_box_lines(lines, 0); }
+    /* calloc check */ { return free_string_array(lines, 0); }
     // attempt to fill the top line with the title, if it's long enough. If it
     // fails, fill the line as normal (without the title)
     if (fill_box_line_with_title(&lines[0], width, BOX_TL_CORNER, BOX_H_LINE, BOX_TR_CORNER, title))
@@ -137,7 +141,7 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title)
     {
         lines[i] = calloc(line_width + 1, sizeof(char));
         /* calloc check */ if (!lines[i])
-        /* calloc check */ { return abort_and_free_box_lines(lines, i); }
+        /* calloc check */ { return free_string_array(lines, i); }
         fill_box_line(&lines[i], width, BOX_V_LINE, " ", BOX_V_LINE);
     }
 
@@ -145,7 +149,7 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title)
     // create the last line: it will have corners and horizontal lines
     lines[height - 1] = calloc(line_width + 1, sizeof(char));
     /* calloc check */ if (!lines[height - 1])
-    /* calloc check */ { return abort_and_free_box_lines(lines, height - 1); }
+    /* calloc check */ { return free_string_array(lines, height - 1); }
     fill_box_line(&lines[height - 1], width, BOX_BL_CORNER, BOX_H_LINE, BOX_BR_CORNER);
 
     return lines;
@@ -204,9 +208,55 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     return 0;
 }
 
-// Takes in a char** returned from 'make_box_lines' and attempts to free each
-// inner string, and the string array itself.
-void free_box_lines(char** lines)
+// Takes in a single string and attempts to split it into multiple strings
+// separated by "\n". Returns a dynamically-allocated array of dynamically-
+// allocated strings on success, and NULL on failure. The array returned
+// will be suffixed by a NULL entry, to indicate the end of the array.
+char** split_text_by_newline(char* text)
+{
+    // check for a NULL string
+    if (!text) { return NULL; }
+
+    // iterate through the string and count the number of "\n" occurrences
+    int text_length = strlen(text);
+    int line_count = 0;
+    for (int i = 0; i < text_length; i++)
+    { line_count += text[i] == '\n'; }
+    line_count++; // add one more to account for the last line
+    
+    // allocate an array of strings to hold each line
+    char** lines = calloc(line_count + 1, sizeof(char*));
+    /* calloc check */ if (!lines) { return NULL; }
+
+    // make a local copy of the text
+    char text_copy[text_length + 1];
+    memset(text_copy, 0, text_length + 1);
+    strncpy(text_copy, text, text_length);
+    // repeatedly find the occurrences of each "\n" and use it to copy each
+    // line into a new string
+    char* current = text_copy;
+    for (int i = 0; i < line_count; i++)
+    {
+        char* line = strtok(current, "\n");
+
+        // allocate a new string in the array
+        int line_length = strlen(line);
+        lines[i] = calloc(line_length + 1, sizeof(char));
+        /* calloc check */ if (!lines[0])
+        /* calloc check */ { return free_string_array(lines, i); }
+        strncpy(lines[i], line, line_length);
+
+        // update the pointer to NULL for all future calls of strtok()
+        current = NULL;
+    }
+
+    return lines;
+}
+
+
+// Takes in a char** returned from and attempts to free each inner string and
+// the string array itself.
+void free_string_array_null_terminated(char** lines)
 {
     // iterate until NULL is reached (there should be an extra slot at the end
     // of the array that's been NULL'd out)
@@ -219,11 +269,9 @@ void free_box_lines(char** lines)
 }
 
 
-// Helper function for when an error occurs, and 'make_box_lines' must free all
-// the memory it's allocated thus far. Accepts a partially-complete array of
-// line strings, and 'length', specifying the number of lines allocated.
-// Each is freed, and NULL is returned.
-char** abort_and_free_box_lines(char** lines, int length)
+// Takes in a char** and a length, and free 'length' inner string, and the
+// string array pointer itself. Returns NULL.
+char** free_string_array(char** lines, int length)
 {
     // free each individual lines
     for (int i = 0; i < length; i++)
@@ -234,5 +282,3 @@ char** abort_and_free_box_lines(char** lines, int length)
     // return NULL
     return NULL;
 }
-
-
