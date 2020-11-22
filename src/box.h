@@ -29,6 +29,8 @@
 #define BOX_T_CROSS "\e(0\x77\e(B"      // top cross
 // other
 #define BOX_CHARACTER_SIZE 8            // number of bytes for each character
+#define BOX_MIN_WIDTH 2                 // the minimum width a box can be
+#define BOX_MIN_HEIGHT 2                // the minimum height a box can be
 
 // ============================== Box Struct =============================== //
 // Text alignment enum
@@ -59,6 +61,8 @@ typedef struct _Box
 // - b_text - the text inside the box
 // The given char* pointers will have their values COPIED onto the heap in this
 // function. On failure, NULL is returned.
+// NOTE: if the width or height is below the minimum value (box.h's
+// BOX_MIN_WIDTH/BOX_MIN_HEIGHT), they'll be set to the minimum values.
 Box* box_new(uint16_t b_width, uint16_t b_height, char* b_title, char* b_text);
 
 // Takes in a Box pointer and attempts to free it. Returns 0 on success, and

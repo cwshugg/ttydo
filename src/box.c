@@ -20,8 +20,9 @@ int main()
 {
 
     printf("box test:\n");
-    Box* b1 = box_new(80, 8, "Title Test", "This is the box's text.");
+    Box* b1 = box_new(0, 0, "Title Test", "This is the box's text.");
     box_print(b1);
+    box_free(b1);
 
     return 0;    
 }
@@ -30,6 +31,10 @@ int main()
 // ============================== Box Struct =============================== //
 Box* box_new(uint16_t b_width, uint16_t b_height, char* b_title, char* b_text)
 {
+    // if the width or height are lower then the minimum values, adjust them
+    if (b_width < BOX_MIN_WIDTH) { b_width = BOX_MIN_WIDTH; }
+    if (b_height < BOX_MIN_HEIGHT) { b_height = BOX_MIN_HEIGHT; }
+
     // allocate a new box, and return NULL on failure
     Box* box = calloc(1, sizeof(Box));
     if (!box) { return NULL; }
@@ -79,6 +84,9 @@ int box_print(Box* box)
     for (int i = 0; i < box->height; i++)
     { fprintf(stdout, "%s\n", lines[i]); }
 
+    // free the allocated memory
+    free_box_lines(lines);
+
     return 0;
 }
 
@@ -88,8 +96,14 @@ int box_print(Box* box)
 // strings, each representing a single line in the box. The number of lines
 // returned is equal to the 'height' parameter.
 // If an error occurs, or allocation fails, NULL is returned.
+// NOTE: if the width or height is below the minimum value (box.h's
+// BOX_MIN_WIDTH/BOX_MIN_HEIGHT), they'll be set to the minimum values.
 char** make_box_lines(uint16_t width, uint16_t height)
 {
+    // if width or height is zero, modify it
+    if (width < BOX_MIN_WIDTH) { width = BOX_MIN_WIDTH; }
+    if (width < BOX_MIN_HEIGHT) { width = BOX_MIN_HEIGHT; }
+
     // allocate an array of strings to represent each line (the extra slot at
     // the end will be NULL.
     char** lines = calloc(height + 1, sizeof(char*));
