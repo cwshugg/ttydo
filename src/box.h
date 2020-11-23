@@ -71,6 +71,12 @@ Box* box_new(uint16_t b_width, uint16_t b_height, char* b_title, char* b_text);
 // a non-zero value on error.
 int box_free(Box* box);
 
+// Takes in a Box pointer and adjusts the width and height values to account
+// for the length of the text, and the number of lines of text.
+// The second 'force_readjust' parameter is used to force the box size to
+// change - even if the box is alredy big enough hold the text.
+void box_adjust_to_text(Box* box, int force_readjust);
+
 // Takes in a Box pointer and attempts to draw it to the terminal. Returns 0 on
 // success and a non-zero value on error.
 // NOTE: it's best to ensure the width of the box is long enough to hold the

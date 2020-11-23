@@ -63,6 +63,42 @@ int box_free(Box* box)
     return 0;
 }
 
+void box_adjust_to_text(Box* box, int force_readjust)
+{
+    // if we received a NULL box, return
+    if (!box) { return; }
+
+    char** lines = split_text_by_newline(box->text);
+    if (!lines) { return; }
+
+    // count the number of lines in the text and find the longest line's
+    // length in the lines
+    int line_count = 0;
+    int longest_width = -1;
+    char** current = lines;
+    while (*current)
+    {
+        // update the longest length and increment the line counter
+        int length = strlen(*current);
+        if (length > longest_width) { longest_width = length; }
+        line_count++;
+
+        current++;
+    }
+    if (lines) { free_string_array_null_terminated(lines); }
+
+    // if the current box size is too small, adjust
+    int width_diff = box->width - 2 - longest_width;
+    int height_diff = box->height - 2 - line_count;
+
+    // update the box width
+    if (width_diff < 0) { box->width = longest_width + 2; }
+    else if (force_readjust) { box->width = longest_width + 2; }
+    // update the box height
+    if (height_diff < 0) { box->height = line_count + 2; }
+    else if (force_readjust) { box->height = line_count + 2; }
+}
+
 int box_print(Box* box)
 {
     // check for a NULL pointer
@@ -363,6 +399,12 @@ int main()
     Box* b6 = box_new(64, 4, " title testing ", "text line 1\ntext line 2\ntext line 3");
     box_print(b6);
     box_free(b6);
+    
+    printf("box readjusted to fill text:\n");
+    Box* b7 = box_new(1, 1, " title testing ", "text line 1 ABCDEFGHIJKLMNOP\ntext line 2\ntext line 3");
+    box_adjust_to_text(b7, 0);
+    box_print(b7);
+    box_free(b7);
 
-    return 0;    
+    return 0;
 }
