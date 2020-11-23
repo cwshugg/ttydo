@@ -41,10 +41,6 @@ Box* box_new(uint16_t b_width, uint16_t b_height, char* b_title, char* b_text)
     if (!b_text) { box->text = NULL; }
     else { box->text = strdup(b_text); }
 
-    // set default fields for the text alignment
-    box->align_horz = LEFT_TOP;
-    box->align_vert = LEFT_TOP;
-
     // return the new box
     return box;
 }
