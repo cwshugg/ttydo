@@ -34,25 +34,14 @@
 // text-related constants
 #define BOX_TEXT_RUNOFF "..."
 
-// ============================== Box Struct =============================== //
-// Text alignment enum
-typedef enum _BoxTextAlignment
-{
-    LEFT_TOP,           // horizontal: left-algin | vertical: top-align
-    CENTER,             // center aligned
-    RIGHT_BOTTOM        // horizontal: right-align | vertical: bottom-align
-} BoxTextAlignment;
-
-// The 'box' struct defines a data structure representing a box to be drawn on
+// ============================== Box Struct =============================== //// The 'box' struct defines a data structure representing a box to be drawn on
 // the terminal window.
 typedef struct _Box
 {
     uint16_t width;     // width, in characters, of the box
     uint16_t height;    // height, in characters, of the box
-    char* title;        // a title displayed in the top-left corner of the box
+    char* title;        // a title displayed in the top-left  of the box
     char* text;         // text to be displayed inside of the box
-    BoxTextAlignment align_horz;    // horizontal text alignment
-    BoxTextAlignment align_vert;    // vertical text alignment
 } Box;
 
 // Constructor: dynamically allocates a new 'Box' object and returns a pointer
@@ -82,4 +71,3 @@ void box_adjust_to_text(Box* box, int force_readjust);
 // NOTE: it's best to ensure the width of the box is long enough to hold the
 // title of the box (if it has one). Otherwise, the print may not look ideal.
 int box_print(Box* box);
-
