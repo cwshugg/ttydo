@@ -226,14 +226,31 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     // if the title is NULL, return 1
     if (!title) { return 1; }
 
-    // check for the correct length
+    // check for the correct length - if the title length is longer than the
+    // available room, adjust the title length
     int title_length = strlen(title);
-    if (width - 4 < title_length) { return 1; }
+    int available_length = width - 4;
+    int has_runoff = title_length > available_length;
+    if (has_runoff) { title_length = available_length; }
+    
+    // create a local copy of the string and copy in the correct number
+    // of characters
+    char title_copy[title_length + 1];
+    memset(title_copy, 0, title_length + 1);
+    if (has_runoff)
+    {
+        int runoff_length = strlen(BOX_TEXT_RUNOFF);
+        strncat(title_copy, title, title_length - runoff_length);
+        strncat(title_copy, BOX_TEXT_RUNOFF, runoff_length);
+        printf("title copy: %s\n", title_copy);
+    }
+    else
+    { strncat(title_copy, title, title_length); }
 
     // otherwise, fill the string
     strncat(*line, BOX_TL_CORNER, strlen(BOX_TL_CORNER));
     strncat(*line, BOX_H_LINE, strlen(BOX_H_LINE));
-    strncat(*line, title, title_length);
+    strncat(*line, title_copy, title_length);
     int current_length = title_length + 2;
 
     // fill the remaining spots (except the last) with the middle string
@@ -376,6 +393,11 @@ char** free_string_array(char** lines, int length)
 //     Box* b2 = box_new(64, 4, " title testing ", NULL);
 //     box_print(b2);
 //     box_free(b2);
+
+//     printf("box with runoff title:\n");
+//     Box* b2_1 = box_new(32, 4, "this title has runoff, see? watch this", NULL);
+//     box_print(b2_1);
+//     box_free(b2_1);
     
 //     printf("box with title and text:\n");
 //     Box* b3 = box_new(64, 4, " title testing ", "this is the box's text. Just one line.");
