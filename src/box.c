@@ -229,7 +229,7 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     // check for the correct length - if the title length is longer than the
     // available room, adjust the title length
     int title_length = strlen(title);
-    int available_length = width - 4;
+    int available_length = width - 6;
     int has_runoff = title_length > available_length;
     if (has_runoff) { title_length = available_length; }
     
@@ -242,7 +242,6 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
         int runoff_length = strlen(BOX_TEXT_RUNOFF);
         strncat(title_copy, title, title_length - runoff_length);
         strncat(title_copy, BOX_TEXT_RUNOFF, runoff_length);
-        printf("title copy: %s\n", title_copy);
     }
     else
     { strncat(title_copy, title, title_length); }
@@ -250,8 +249,10 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     // otherwise, fill the string
     strncat(*line, BOX_TL_CORNER, strlen(BOX_TL_CORNER));
     strncat(*line, BOX_H_LINE, strlen(BOX_H_LINE));
+    strncat(*line, " ", 1);
     strncat(*line, title_copy, title_length);
-    int current_length = title_length + 2;
+    strncat(*line, " ", 1);
+    int current_length = title_length + 4;
 
     // fill the remaining spots (except the last) with the middle string
     int middle_length = strlen(middle);
@@ -390,7 +391,7 @@ char** free_string_array(char** lines, int length)
 //     box_free(b1);
     
 //     printf("box with title:\n");
-//     Box* b2 = box_new(64, 4, " title testing ", NULL);
+//     Box* b2 = box_new(64, 4, "title testing", NULL);
 //     box_print(b2);
 //     box_free(b2);
 
@@ -400,27 +401,27 @@ char** free_string_array(char** lines, int length)
 //     box_free(b2_1);
     
 //     printf("box with title and text:\n");
-//     Box* b3 = box_new(64, 4, " title testing ", "this is the box's text. Just one line.");
+//     Box* b3 = box_new(64, 4, "title testing", "this is the box's text. Just one line.");
 //     box_print(b3);
 //     box_free(b3);
     
 //     printf("box with title and text that's too long:\n");
-//     Box* b4 = box_new(32, 4, " title testing ", "this box has text that is too long for it.");
+//     Box* b4 = box_new(32, 4, "title testing", "this box has text that is too long for it.");
 //     box_print(b4);
 //     box_free(b4);
     
 //     printf("box with title and just enough lines of text:\n");
-//     Box* b5 = box_new(48, 4, " title testing ", "this is the first line of text\nthis is the second");
+//     Box* b5 = box_new(48, 4, "title testing", "this is the first line of text\nthis is the second");
 //     box_print(b5);
 //     box_free(b5);
     
 //     printf("box with title and too many lines of text:\n");
-//     Box* b6 = box_new(64, 4, " title testing ", "text line 1\ntext line 2\ntext line 3");
+//     Box* b6 = box_new(64, 4, "title testing", "text line 1\ntext line 2\ntext line 3");
 //     box_print(b6);
 //     box_free(b6);
     
 //     printf("box readjusted to fill text:\n");
-//     Box* b7 = box_new(1, 1, " title testing ", "text line 1 ABCDEFGHIJKLMNOP\ntext line 2\ntext line 3");
+//     Box* b7 = box_new(1, 1, "title testing", "text line 1 ABCDEFGHIJKLMNOP\ntext line 2\ntext line 3");
 //     box_adjust_to_text(b7, 0);
 //     box_print(b7);
 //     box_free(b7);

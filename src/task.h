@@ -15,7 +15,7 @@ typedef struct _Task
 {
     char* title;            // the title of the task
     char* description;      // the description of the task
-    int complete;           // whether or not the task is finished
+    int is_complete;        // whether or not the task is finished
 } Task;
 
 // Constructor: dynamically allocates memory for a new 'Task' struct, and
