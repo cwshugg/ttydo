@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "tasklist.h"
-#include "visual/box.h"
+#include "visual/boxstack.h"
 #include "visual/terminal.h"
 
 
@@ -246,112 +246,124 @@ void task_list_print_box(TaskList* list, int fill_width)
         if (i < list->size - 1) { strncat(box_string, "\n", 1); }
         free(task_strings[i]);
     }
+
+    // create a box stack to hold the multiple boxes
+    BoxStack* stack = box_stack_new(2, 0);
     
-    // finally, create a box with the given string
-    Box* box = box_new(0, 0, list->name, box_string);
-    free(box_string);           // free the old box string (it was just copied)
-    box_adjust_to_text(box, 1); // ensure the box fill fit the text
+    // modify the first box - this will hold the tasks' text
+    Box* text_box = stack->boxes[0];
+    text_box->title = strdup(list->name);
+    text_box->text = box_string;
+    box_adjust_to_text(text_box, 1);
 
-    // if 'fill_width' is set, adjust the box to fit the terminal. Otherwise,
-    // make the box fit to the text.
-    if (fill_width) { box->width = get_terminal_width(); }
+    // modify the second box - this will hold a progress bar
+    Box* progress_box = stack->boxes[1];
+    progress_box->title = strdup("Progress");
+    progress_box->text = strdup("TODO: add a progress bar and percentage!");
+    box_adjust_to_text(progress_box, 1);
 
-    // print the box and free it
-    box_print(box);
-    box_free(box);
+    // use the first box's width to set the entire stack's width
+    box_stack_set_width(stack, text_box->width);
+
+    // if 'fill_width' is set, adjust the stack to fill the terminal
+    if (fill_width) { box_stack_set_width(stack, get_terminal_width()); }
+
+    // print the stack and free it
+    box_stack_print(stack);
+    box_stack_free(stack);
 }
 
 
 // ================================ Testing ================================ //
-// #include <time.h>
-// void shuffle_int_array(int* array, int length)
-// {
-//     srand(time(NULL));
-//     for (int i = length - 1; i > 0; i--)
-//     {
-//         int j = rand() % (i + 1);
-//         // swap two elements
-//         int temp = array[i];
-//         array[i] = array[j];
-//         array[j] = temp;
-//     }
-// }
+#include <time.h>
+void shuffle_int_array(int* array, int length)
+{
+    srand(time(NULL));
+    for (int i = length - 1; i > 0; i--)
+    {
+        int j = rand() % (i + 1);
+        // swap two elements
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
 
-// int main()
-// {
-//     // testing a single list element
-//     Task* t1 = task_new("Task 1", "This is task 1!");
-//     TaskListElem* e1 = task_list_elem_new(t1, NULL, NULL);
-//     Task* e1_task = task_list_elem_free(e1);
-//     printf("Task pointers equal? %p == %p\n\n", t1, e1_task);
-//     task_free(t1);
+int main()
+{
+    // testing a single list element
+    Task* t1 = task_new("Task 1", "This is task 1!");
+    TaskListElem* e1 = task_list_elem_new(t1, NULL, NULL);
+    Task* e1_task = task_list_elem_free(e1);
+    printf("Task pointers equal? %p == %p\n\n", t1, e1_task);
+    task_free(t1);
 
-//     // testing a list
-//     TaskList* l1 = task_list_new("list 1");
-//     printf("Testing Task List: %s\n", l1->name);
+    // testing a list
+    TaskList* l1 = task_list_new("list 1");
+    printf("Testing Task List: %s\n", l1->name);
 
-//     // inserting Tasks into the list
-//     int task_count = 5;
-//     Task* task_array[task_count];
-//     for (int i = 0; i < task_count; i++)
-//     {
-//         char task_name[16];
-//         snprintf(task_name, 16, "Task %d", i);
-//         char task_desc[64];
-//         snprintf(task_desc, 64, "This is task %d's description.", i);
-//         // create the task and insert it
-//         Task* task = task_new(task_name, task_desc);
-//         if (i % 2) { task->is_complete = 1; }
-//         task_array[i] = task;
-//         int failed = task_list_append(l1, task);
+    // inserting Tasks into the list
+    int task_count = 5;
+    Task* task_array[task_count];
+    for (int i = 0; i < task_count; i++)
+    {
+        char task_name[16];
+        snprintf(task_name, 16, "Task %d", i);
+        char task_desc[64];
+        snprintf(task_desc, 64, "This is task %d's description.", i);
+        // create the task and insert it
+        Task* task = task_new(task_name, task_desc);
+        if (i % 2) { task->is_complete = 1; }
+        task_array[i] = task;
+        int failed = task_list_append(l1, task);
         
-//         char* task_string = task_to_string(task);
-//         if (!failed)
-//         { printf("Successfully inserted: '%s'\n", task_string); }
-//         else
-//         { printf("Failed to insert task: '%s'\n", task_string); }
-//         if (task_string) { free(task_string); }
-//     }
+        char* task_string = task_to_string(task);
+        if (!failed)
+        { printf("Successfully inserted: '%s'\n", task_string); }
+        else
+        { printf("Failed to insert task: '%s'\n", task_string); }
+        if (task_string) { free(task_string); }
+    }
 
-//     // search the list for every element (BY INDEX)
-//     for (int i = 0; i < task_count; i++)
-//     {
-//         Task* result = task_list_get_by_index(l1, i);
-//         printf("Search by index (%d): '%s'\n", i, result->title);
-//     }
+    // search the list for every element (BY INDEX)
+    for (int i = 0; i < task_count; i++)
+    {
+        Task* result = task_list_get_by_index(l1, i);
+        printf("Search by index (%d): '%s'\n", i, result->title);
+    }
 
-//     // search the list for every element (BY TITLE)
-//     for (int i = 0; i < task_count; i++)
-//     {
-//         char task_name[16];
-//         snprintf(task_name, 16, "Task %d", i);
-//         Task* result = task_list_get_by_title(l1, task_name);
-//         printf("Search by index ('%s'): '%s'\n", task_name, result->title);
-//     }
+    // search the list for every element (BY TITLE)
+    for (int i = 0; i < task_count; i++)
+    {
+        char task_name[16];
+        snprintf(task_name, 16, "Task %d", i);
+        Task* result = task_list_get_by_title(l1, task_name);
+        printf("Search by index ('%s'): '%s'\n", task_name, result->title);
+    }
 
-//     // print the list in box form
-//     printf("Box print 1:\n");
-//     task_list_print_box(l1, 1);
-//     printf("Box print 2:\n");
-//     task_list_print_box(l1, 0);
+    // print the list in box form
+    printf("Box print 1:\n");
+    task_list_print_box(l1, 1);
+    printf("Box print 2:\n");
+    task_list_print_box(l1, 0);
 
-//     // create an array of integers from 0..(task_count - 1). Then, shuffle it
-//     int indexes[task_count];
-//     for (int i = 0; i < task_count; i++) { indexes[i] = i; }
-//     shuffle_int_array(indexes, task_count);
+    // create an array of integers from 0..(task_count - 1). Then, shuffle it
+    int indexes[task_count];
+    for (int i = 0; i < task_count; i++) { indexes[i] = i; }
+    shuffle_int_array(indexes, task_count);
 
-//     // use the randomized indexes to remove elements from the list
-//     for (int i = 0; i < task_count; i++)
-//     {
-//         int index = indexes[i];
-//         Task* result = task_list_remove(l1, task_array[index]);
-//         printf("Result of removing task: '%s' == '%s'", task_array[index]->title, result->title);
-//         printf("\tList: [head = %p] [tail = %p] [size = %d]\n", l1->head, l1->tail, l1->size);
-//         task_free(result);
-//     }
-//     printf("-----\nAfter removing all elements:\nList head: %p\nList tail: %p\nList size: %d\n-----\n",
-//            l1->head, l1->tail, l1->size);
+    // use the randomized indexes to remove elements from the list
+    for (int i = 0; i < task_count; i++)
+    {
+        int index = indexes[i];
+        Task* result = task_list_remove(l1, task_array[index]);
+        printf("Result of removing task: '%s' == '%s'", task_array[index]->title, result->title);
+        printf("\tList: [head = %p] [tail = %p] [size = %d]\n", l1->head, l1->tail, l1->size);
+        task_free(result);
+    }
+    printf("-----\nAfter removing all elements:\nList head: %p\nList tail: %p\nList size: %d\n-----\n",
+           l1->head, l1->tail, l1->size);
 
-//     // free the entire list
-//     task_list_free(l1);
-// }
+    // free the entire list
+    task_list_free(l1);
+}
