@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "tasklist.h"
+#include "box.h"
+#include "terminal.h"
 
 
 // =========================== List Elem Struct ============================ //
@@ -211,6 +213,54 @@ Task* task_list_remove(TaskList* list, Task* task)
     return payload;
 }
 
+void task_list_print_box(TaskList* list, int fill_width)
+{
+    // if we were given a NULL pointer, return
+    if (!list) { return; }
+
+    // first, we'll count the amount of space we'll need for our inner box
+    // string - by summing up each task's to_string() result
+    char* task_strings[list->size + 1];
+    task_strings[list->size] = NULL; // null terminated
+    TaskListElem* current = list->head;
+    int i = 0;
+    int box_string_size = 0;
+    while (i < list->size && current)
+    {
+        // convert the current task to a string and add the string's length
+        task_strings[i] = task_to_string(current->task);
+        if (task_strings[i]) { box_string_size += strlen(task_strings[i++]); }
+        current = current->next;
+    }
+    // calculate the final size for our inner box string and allocate it
+    box_string_size += (8 * list->size);
+    char* box_string = calloc(box_string_size + 1, sizeof(char));
+    // if the allocation failed, return
+    if (!box_string) { return; }
+
+    // add each task string to the box string (and free the individual task
+    // strings along the way)
+    for (int i = 0; i < list->size; i++)
+    {
+        strncat(box_string, task_strings[i], strlen(task_strings[i]));
+        if (i < list->size - 1) { strncat(box_string, "\n", 1); }
+        free(task_strings[i]);
+    }
+    
+    // finally, create a box with the given string
+    Box* box = box_new(0, 0, list->name, box_string);
+    free(box_string);           // free the old box string (it was just copied)
+    box_adjust_to_text(box, 1); // ensure the box fill fit the text
+
+    // if 'fill_width' is set, adjust the box to fit the terminal. Otherwise,
+    // make the box fit to the text.
+    if (fill_width) { box->width = get_terminal_width(); }
+
+    // print the box and free it
+    box_print(box);
+    box_free(box);
+}
+
 
 // ================================ Testing ================================ //
 #include <time.h>
@@ -251,6 +301,7 @@ int main()
         snprintf(task_desc, 64, "This is task %d's description.", i);
         // create the task and insert it
         Task* task = task_new(task_name, task_desc);
+        if (i % 2) { task->is_complete = 1; }
         task_array[i] = task;
         int failed = task_list_append(l1, task);
         
@@ -277,6 +328,12 @@ int main()
         Task* result = task_list_get_by_title(l1, task_name);
         printf("Search by index ('%s'): '%s'\n", task_name, result->title);
     }
+
+    // print the list in box form
+    printf("Box print 1:\n");
+    task_list_print_box(l1, 1);
+    printf("Box print 2:\n");
+    task_list_print_box(l1, 0);
 
     // create an array of integers from 0..(task_count - 1). Then, shuffle it
     int indexes[task_count];
