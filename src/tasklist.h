@@ -5,6 +5,7 @@
 
 // Module inclusions
 #include "task.h"
+#include "visual/boxstack.h"
 
 // ========================== Constants & Macros =========================== //
 #define TASK_LIST_NAME_MAX_LENGTH 64    // maximum character count for a name
@@ -67,9 +68,9 @@ Task* task_list_get_by_title(TaskList* list, char* task_title);
 // pointer's memory. (If the task isn't found and removed, NULL is returned.)
 Task* task_list_remove(TaskList* list, Task* task);
 
-// Takes in a pointer to a task list and attempts to print a boxed-in string
-// representation of the list. The 'fill_width' parameter is used to indicate
-// if the printed box should take up the entire width of the terminal. If it's
-// non-zero, the entire width is used. If it's 0, the box will be as small as
-// possible while still fitting each task string inside.
-void task_list_print_box(TaskList* list, int fill_width);
+// Takes in a pointer to a TaskList and attempts to create a custom BoxStack
+// for the list.The 'fill_width' parameter is used to indicate if the printed
+// box should take up the entire width of the terminal. If it's non-zero, the
+// entire width is used. If it's 0, the box will be as small as possible while
+// still fitting each task string inside.
+BoxStack* task_list_to_box_stack(TaskList* list, int fill_width);

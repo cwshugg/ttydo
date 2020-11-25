@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "tasklist.h"
-#include "visual/boxstack.h"
 #include "visual/terminal.h"
 
 
@@ -213,10 +212,10 @@ Task* task_list_remove(TaskList* list, Task* task)
     return payload;
 }
 
-void task_list_print_box(TaskList* list, int fill_width)
+BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
 {
-    // if we were given a NULL pointer, return
-    if (!list) { return; }
+    // if we were given a NULL pointer, return NULL
+    if (!list) { return NULL; }
 
     // first, we'll count the amount of space we'll need for our inner box
     // string - by summing up each task's to_string() result
@@ -235,8 +234,8 @@ void task_list_print_box(TaskList* list, int fill_width)
     // calculate the final size for our inner box string and allocate it
     box_string_size += (8 * list->size);
     char* box_string = calloc(box_string_size + 1, sizeof(char));
-    // if the allocation failed, return
-    if (!box_string) { return; }
+    // if the allocation failed, return NULL
+    if (!box_string) { return NULL; }
 
     // add each task string to the box string (and free the individual task
     // strings along the way)
@@ -247,8 +246,14 @@ void task_list_print_box(TaskList* list, int fill_width)
         free(task_strings[i]);
     }
 
-    // create a box stack to hold the multiple boxes
+    // create a box stack to hold the multiple boxes. If allocation failed,
+    // free all memory and return NULL
     BoxStack* stack = box_stack_new(2, 0);
+    if (!stack)
+    {
+        free(box_string);
+        return NULL;
+    }
     
     // modify the first box - this will hold the tasks' text
     Box* text_box = stack->boxes[0];
@@ -262,15 +267,13 @@ void task_list_print_box(TaskList* list, int fill_width)
     progress_box->text = strdup("TODO: add a progress bar and percentage!");
     box_adjust_to_text(progress_box, 1);
 
-    // use the first box's width to set the entire stack's width
+    // use the first box's width to set the entire stack's width. Then, if
+    // 'fill_width' is set, adjuts the stack to fill the terminal
     box_stack_set_width(stack, text_box->width);
-
-    // if 'fill_width' is set, adjust the stack to fill the terminal
     if (fill_width) { box_stack_set_width(stack, get_terminal_width()); }
 
-    // print the stack and free it
-    box_stack_print(stack);
-    box_stack_free(stack);
+    // return the stack
+    return stack;
 }
 
 
@@ -341,11 +344,15 @@ int main()
         printf("Search by index ('%s'): '%s'\n", task_name, result->title);
     }
 
-    // print the list in box form
+    // print the list in box stack form
     printf("Box print 1:\n");
-    task_list_print_box(l1, 1);
+    BoxStack* stack1 = task_list_to_box_stack(l1, 1);
+    box_stack_print(stack1);
+    box_stack_free(stack1);
     printf("Box print 2:\n");
-    task_list_print_box(l1, 0);
+    BoxStack* stack2 = task_list_to_box_stack(l1, 0);
+    box_stack_print(stack2);
+    box_stack_free(stack2);
 
     // create an array of integers from 0..(task_count - 1). Then, shuffle it
     int indexes[task_count];
