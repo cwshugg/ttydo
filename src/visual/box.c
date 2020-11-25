@@ -84,12 +84,12 @@ void box_adjust_to_text(Box* box, int force_readjust)
     if (lines) { free_string_array_null_terminated(lines); }
 
     // if the current box size is too small, adjust
-    int width_diff = box->width - 2 - longest_width;
+    int width_diff = box->width - 4 - longest_width;
     int height_diff = box->height - 2 - line_count;
 
     // update the box width
-    if (width_diff < 0) { box->width = longest_width + 2; }
-    else if (force_readjust) { box->width = longest_width + 2; }
+    if (width_diff < 0) { box->width = longest_width + 4; }
+    else if (force_readjust) { box->width = longest_width + 4; }
     // update the box height
     if (height_diff < 0) { box->height = line_count + 2; }
     else if (force_readjust) { box->height = line_count + 2; }
@@ -290,7 +290,7 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
     // determine how much room there is for the text
     int text_length = strlen(text);
     int runoff_length = strlen(BOX_TEXT_RUNOFF);
-    int available_length = width - runoff_length + 1/*- 2*/;
+    int available_length = (width - 2) - runoff_length + 1;
     int copied_text_length = text_length;
     if (text_length > available_length) { copied_text_length = available_length; }
 
@@ -303,14 +303,16 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
 
     // write the left edge
     strncat(*line, left_edge, strlen(left_edge));
+    strncat(*line, " ", 1);
 
     // write the middle characters
     strncat(*line, text_copy, copied_text_length);
     int middle_length = strlen(middle);
-    for (int i = 0; i < width - 2 - copied_text_length; i++)
+    for (int i = 0; i < width - 4 - copied_text_length; i++)
     { strncat(*line, middle, middle_length); }
 
     // write the right edge
+    strncat(*line, " ", 1);
     strncat(*line, right_edge, strlen(right_edge));
 
     return 0;
