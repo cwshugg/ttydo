@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "tasklist.h"
-#include "box.h"
-#include "terminal.h"
+#include "visual/box.h"
+#include "visual/terminal.h"
 
 
 // =========================== List Elem Struct ============================ //
