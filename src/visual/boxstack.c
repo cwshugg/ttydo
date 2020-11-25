@@ -54,21 +54,42 @@ void box_stack_free(BoxStack* stack)
     free(stack);
 }
 
-void box_stack_set_width(BoxStack* stack, int box_width);
+void box_stack_set_width(BoxStack* stack, int box_width)
+{
+    // if we were given a NULL pointer, return
+    if (!stack) { return; }
+    // if the given width is below the minimum, use the minimum value instead
+    if (box_width < BOX_MIN_WIDTH) { box_width = BOX_MIN_WIDTH; }
 
-void box_stack_print(BoxStack* stack);
+    // set the widths for all boxes in the stack
+    stack->width = box_width;
+    for (int i = 0; i < stack->size; i++)
+    { stack->boxes[i]->width = box_width; }
+}
+
+void box_stack_print(BoxStack* stack)
+{
+    
+}
 
 
 // ================================ Testing ================================ //
-int main()
-{
-    // create a box stack
-    BoxStack* stack = box_stack_new(4, 100);
-    printf("New box stack (%p):\n- Size = %d\n- Width = %d\n", stack,
-           stack->size, stack->width);
+// int main()
+// {
+//     // create a box stack
+//     BoxStack* stack = box_stack_new(4, 100);
+//     box_stack_set_width(stack, 316);
+//     printf("New box stack (%p):\n- Size = %d\n- Width = %d\n", stack,
+//            stack->size, stack->width);
+//     for (int i = 0; i < stack->size; i++)
+//     {
+//         printf("- Box %d: [width: %d] [height: %d] [title: '%s'] [text: '%s']\n",
+//                i, stack->boxes[i]->width, stack->boxes[i]->height,
+//                stack->boxes[i]->title, stack->boxes[i]->text);
+//     }
     
-    // free the box stack
-    box_stack_free(stack);
+//     // free the box stack
+//     box_stack_free(stack);
 
-    return 0;
-}
+//     return 0;
+// }

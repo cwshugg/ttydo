@@ -71,3 +71,10 @@ void box_adjust_to_text(Box* box, int force_readjust);
 // NOTE: it's best to ensure the width of the box is long enough to hold the
 // title of the box (if it has one). Otherwise, the print may not look ideal.
 int box_print(Box* box);
+
+// Takes in a Box pointer and generates the lines needed to draw the box to the
+// terminal. A pointer to a dynamically-allocated array of dynamically-allocated
+// strings is returned. The number of dynamically-allocated strings in the
+// array is equal to the height of the given box. The array is also NULL
+// terminated.
+char** box_to_string(Box* box);
