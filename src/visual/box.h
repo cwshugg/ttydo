@@ -77,4 +77,4 @@ int box_print(Box* box);
 // strings is returned. The number of dynamically-allocated strings in the
 // array is equal to the height of the given box. The array is also NULL
 // terminated.
-char** box_to_string(Box* box);
+char** box_to_lines(Box* box);

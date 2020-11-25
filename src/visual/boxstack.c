@@ -3,6 +3,7 @@
 //      Connor Shugg
 
 // Module inclusions
+#include <string.h>
 #include "boxstack.h"
 
 // =========================== Box Stack Struct ============================ //
@@ -69,27 +70,69 @@ void box_stack_set_width(BoxStack* stack, int box_width)
 
 void box_stack_print(BoxStack* stack)
 {
-    
+    // if we were given a NULL pointer, or the box's size is zero, return
+    if (!stack || stack->size == 0) { return; }
+
+    // iterate through each box
+    for (int i = 0; i < stack->size; i++)
+    {
+        Box* b = stack->boxes[i];
+        // retrieve an array of lines to print the current box
+        char** lines = box_to_lines(b);
+
+        // if this isn't the last box in the stack, we DON'T want to print the
+        // last line for this box. That line will be replaced by the top line
+        // of the *next* box.
+        int end = b->height;
+        if (i < stack->size - 1) { end--; }
+        // iterate through the lines and print
+        for (int j = 0; j < end; j++)
+        {
+            // if this is the top line of the box, AND it's not the first box,
+            // we want to modify the corner characters to visually connect the
+            // boxes.
+            if (i > 0 && j == 0)
+            {
+                strncpy(lines[j], BOX_L_CROSS, strlen(BOX_L_CROSS));
+                strncpy(lines[j] + strlen(lines[j]) - strlen(BOX_TR_CORNER),
+                        BOX_R_CROSS, strlen(BOX_R_CROSS));
+            }
+            fprintf(stdout, "%s\n", lines[j]);
+        }
+
+        // free the line strings
+        char** current = lines;
+        while (*current) { free(*(current++)); }
+        free (lines);
+    }
 }
 
 
 // ================================ Testing ================================ //
-// int main()
-// {
-//     // create a box stack
-//     BoxStack* stack = box_stack_new(4, 100);
-//     box_stack_set_width(stack, 316);
-//     printf("New box stack (%p):\n- Size = %d\n- Width = %d\n", stack,
-//            stack->size, stack->width);
-//     for (int i = 0; i < stack->size; i++)
-//     {
-//         printf("- Box %d: [width: %d] [height: %d] [title: '%s'] [text: '%s']\n",
-//                i, stack->boxes[i]->width, stack->boxes[i]->height,
-//                stack->boxes[i]->title, stack->boxes[i]->text);
-//     }
-    
-//     // free the box stack
-//     box_stack_free(stack);
+int main()
+{
+    // create a box stack
+    BoxStack* stack = box_stack_new(4, 100);
+    box_stack_set_width(stack, 50);
+    printf("New box stack (%p):\n- Size = %d\n- Width = %d\n", stack,
+           stack->size, stack->width);
+    for (int i = 0; i < stack->size; i++)
+    {
+        char title[16];
+        snprintf(title, 16, "Box %d", i);
+        stack->boxes[i]->title = strdup(title);
+        stack->boxes[i]->height = 3;
 
-//     return 0;
-// }
+        printf("- Box %d: [width: %d] [height: %d] [title: '%s'] [text: '%s']\n",
+               i, stack->boxes[i]->width, stack->boxes[i]->height,
+               stack->boxes[i]->title, stack->boxes[i]->text);
+    }
+
+    printf("printing the box stack:\n");
+    box_stack_print(stack);
+    
+    // free the box stack
+    box_stack_free(stack);
+
+    return 0;
+}
