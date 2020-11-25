@@ -7,6 +7,9 @@
 //
 //      Connor Shugg
 
+#ifndef BOXSTACK_H
+#define BOXSTACK_H
+
 // Module inclusions
 #include "box.h"
 
@@ -35,3 +38,5 @@ void box_stack_set_width(BoxStack* stack, int box_width);
 // Takes in a pointer to a BoxStack and attempts to print each box on top of
 // each other.
 void box_stack_print(BoxStack* stack);
+
+#endif

@@ -3,6 +3,9 @@
 //
 //      Connor Shugg
 
+#ifndef TASK_H
+#define TASK_H
+
 // ========================= Constants and Macros ========================== //
 #define TASK_TITLE_MAX_LENGTH 32    // the max number of characters in a title
 
@@ -34,3 +37,5 @@ void task_free(Task* task);
 // that repesents the task. The returned pointer must be freed after it's used.
 // On failure, NULL is returned.
 char* task_to_string(Task* task);
+
+#endif

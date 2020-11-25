@@ -3,6 +3,9 @@
 //
 //      Connor Shugg
 
+#ifndef BOX_H
+#define BOX_H
+
 // Module inclusions
 #include<stdlib.h>
 #include<stdio.h>
@@ -78,3 +81,5 @@ int box_print(Box* box);
 // array is equal to the height of the given box. The array is also NULL
 // terminated.
 char** box_to_lines(Box* box);
+
+#endif

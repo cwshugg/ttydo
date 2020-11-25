@@ -3,6 +3,9 @@
 //
 //      Connor Shugg
 
+#ifndef TASKLIST_H
+#define TASKLIST_H
+
 // Module inclusions
 #include "task.h"
 #include "visual/boxstack.h"
@@ -74,3 +77,5 @@ Task* task_list_remove(TaskList* list, Task* task);
 // entire width is used. If it's 0, the box will be as small as possible while
 // still fitting each task string inside.
 BoxStack* task_list_to_box_stack(TaskList* list, int fill_width);
+
+#endif
