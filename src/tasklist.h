@@ -52,9 +52,14 @@ void task_list_free(TaskList* list);
 // otherwise.
 int task_list_append(TaskList* list, Task* task);
 
+// Uses the given index to get the Task stored at the corresponding node (as if
+// the linked list was an array). The Task* is returned on success, and NULL
+// is returned on failure.
+Task* task_list_get_by_index(TaskList* list, int list_index);
+
 // Searches the task list for a task with the given name. If a task is found,
 // the pointer to the Task struct is returned. Otherwise, NULL is returned.
-Task* task_list_search(TaskList* list, char* task_name);
+Task* task_list_get_by_title(TaskList* list, char* task_title);
 
 // Takes in a pointer to a Task struct and searches the list for the
 // TaskListElem that contains the pointer. If it's found, the item is removed

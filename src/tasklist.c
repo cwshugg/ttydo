@@ -124,7 +124,53 @@ int task_list_append(TaskList* list, Task* task)
     return 0;
 }
 
-Task* task_list_search(TaskList* list, char* task_name);
+Task* task_list_get_by_index(TaskList* list, int list_index)
+{
+    // if a NULL list pointer was given, return NULL
+    if (!list) { return NULL; }
+    // if an invalid list index was given, return NULL
+    if (list_index < 0 || list_index >= list->size)
+    { return NULL; }
+    // if our list's size is 0, return NULL
+    if (list->size == 0) { return NULL; }
+
+    // iterate until we reach the correct list index
+    TaskListElem* current = list->head;
+    int i = 0;
+    while (i++ < list_index && current)
+    { current = current->next; }
+
+    // extract the Task payload and return it
+    return current->task;
+}
+
+Task* task_list_get_by_title(TaskList* list, char* task_title)
+{
+    // if NULL pointers were given, return NULL
+    if (!list || !task_title) { return NULL; }
+    // if our list's size is 0, return NULL
+    if (list->size == 0) { return NULL; }
+
+    // iterate through the list until a matching task is found
+    TaskListElem* match = NULL;
+    TaskListElem* current = list->head;
+    int i = 0;
+    while (i++ < list->size && current && !match)
+    {
+        // if the current task's title matches, we've found the correct element
+        if (!strcmp(current->task->title, task_title))
+        { match = current; }
+
+        // increment pointer
+        current = current->next;
+    }
+
+    // if a match wasn't found, return NULL
+    if (!match) { return NULL; }
+
+    // extract the Task and return it
+    return match->task;
+}
 
 Task* task_list_remove(TaskList* list, Task* task)
 {
@@ -135,14 +181,13 @@ Task* task_list_remove(TaskList* list, Task* task)
     TaskListElem* match = NULL;
     TaskListElem* current = list->head;
     int i = 0;
-    while (i < list->size && current && !match)
+    while (i++ < list->size && current && !match)
     {
         // if the pointers match, we've found the correct element
         if (current->task == task)
         { match = current; }
 
-        // increment counter and pointer
-        i++;
+        // increment pointer
         current = current->next;
     }
 
@@ -215,6 +260,22 @@ int main()
         else
         { printf("Failed to insert task: '%s'\n", task_string); }
         if (task_string) { free(task_string); }
+    }
+
+    // search the list for every element (BY INDEX)
+    for (int i = 0; i < task_count; i++)
+    {
+        Task* result = task_list_get_by_index(l1, i);
+        printf("Search by index (%d): '%s'\n", i, result->title);
+    }
+
+    // search the list for every element (BY TITLE)
+    for (int i = 0; i < task_count; i++)
+    {
+        char task_name[16];
+        snprintf(task_name, 16, "Task %d", i);
+        Task* result = task_list_get_by_title(l1, task_name);
+        printf("Search by index ('%s'): '%s'\n", task_name, result->title);
     }
 
     // create an array of integers from 0..(task_count - 1). Then, shuffle it
