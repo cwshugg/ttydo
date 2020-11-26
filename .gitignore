@@ -1,5 +1,4 @@
 # ignore binaries
-src/box
 src/ttydo
 ttydo
 
