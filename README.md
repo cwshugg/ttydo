@@ -16,7 +16,7 @@ Here's an example of what a single task list in ttydo might look like:
 ```
 
 
-# Future Goaks
+# Future Goals
 These are things that I'd like to implement into `ttydo`:
 
 - Give tasks a unique ID
