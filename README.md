@@ -14,3 +14,11 @@ Here's an example of what a single task list in ttydo might look like:
 │ 33%  [==============================                                                             ] │
 └────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+
+# Future Goaks
+These are things that I'd like to implement into `ttydo`:
+
+- Give tasks a unique ID
+- Add the ability for tasks to have @tags
+  - Let tasks be searchable/displayed by tags
