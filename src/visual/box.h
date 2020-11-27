@@ -15,20 +15,21 @@
 // Box-drawing character definitions
 // https://www.daniweb.com/programming/software-development/code/476650/linux-console-ascii-box-drawing-characters
 // https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472
+// https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472
 // corners
-#define BOX_BR_CORNER "\e(0\x6a\e(B"    // bottom-right corner
-#define BOX_TR_CORNER "\e(0\x6b\e(B"    // top-right corner
-#define BOX_BL_CORNER "\e(0\x6d\e(B"    // bottom-left corner
-#define BOX_TL_CORNER "\e(0\x6c\e(B"    // top-left corner
+#define BOX_BR_CORNER "\u2518"          // bottom-right corner
+#define BOX_TR_CORNER "\u2510"          // top-right corner
+#define BOX_BL_CORNER "\u2514"          // bottom-left corner
+#define BOX_TL_CORNER "\u250c"          // top-left corner
 // lines
-#define BOX_H_LINE "\e(0\x71\e(B"       // horizontal line
-#define BOX_V_LINE "\e(0\x78\e(B"       // vertical line
+#define BOX_H_LINE "\u2500"             // horizontal line
+#define BOX_V_LINE "\u2502"             // vertical line
 // crosses
-#define BOX_M_CROSS "\e(0\x6e\e(B"      // middle cross
-#define BOX_L_CROSS "\e(0\x74\e(B"      // left cross
-#define BOX_R_CROSS "\e(0\x75\e(B"      // right cross
-#define BOX_B_CROSS "\e(0\x76\e(B"      // bottom cross
-#define BOX_T_CROSS "\e(0\x77\e(B"      // top cross
+#define BOX_M_CROSS "\u253c"            // middle cross
+#define BOX_L_CROSS "\u251c"            // left cross
+#define BOX_R_CROSS "\u2524"            // right cross
+#define BOX_B_CROSS "\u2534"            // bottom cross
+#define BOX_T_CROSS "\u252c"            // top cross
 // other
 #define BOX_CHARACTER_SIZE 8            // number of bytes for each character
 #define BOX_MIN_WIDTH 2                 // the minimum width a box can be
