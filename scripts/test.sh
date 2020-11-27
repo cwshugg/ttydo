@@ -41,7 +41,7 @@ fi
 # run the makefile's 'make test' option
 echo -e "${c_yellow}Compiling test...${c_none}"
 cd $dir_tests/..
-make test TEST=$dir_tests/$1.c
+make test TEST=tests/$1.c
 
 # if the binary wasn't created, quit
 if [ ! -f ./TEST ]; then
@@ -52,11 +52,11 @@ else
 fi
 
 # move the 'TEST' binary into ./tests
-mv ./TEST $dir_tests/TEST
+mv ./TEST tests/TEST
 
 # execute the test
 echo -e "${c_yellow}Executing test...${c_none}"
-cd $dir_tests
+cd tests
 if [ $run_with_valgrind -eq 1 ]; then   # run with valgrind:
     valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./TEST
 else                                    # run without valgrind:
