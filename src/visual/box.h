@@ -10,7 +10,6 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<inttypes.h>
-#include<wchar.h>
 
 // ======================== Box-Drawing Characters ========================= //
 // Box-drawing character definitions
