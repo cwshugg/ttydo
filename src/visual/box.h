@@ -13,8 +13,6 @@
 
 // ======================== Box-Drawing Characters ========================= //
 // Box-drawing character definitions
-// https://www.daniweb.com/programming/software-development/code/476650/linux-console-ascii-box-drawing-characters
-// https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472
 // https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472
 // corners
 #define BOX_BR_CORNER "\u2518"          // bottom-right corner
@@ -31,7 +29,7 @@
 #define BOX_B_CROSS "\u2534"            // bottom cross
 #define BOX_T_CROSS "\u252c"            // top cross
 // other
-#define BOX_CHARACTER_SIZE 8            // number of bytes for each character
+#define BOX_CHARACTER_SIZE 3            // number of bytes for each character
 #define BOX_MIN_WIDTH 2                 // the minimum width a box can be
 #define BOX_MIN_HEIGHT 2                // the minimum height a box can be
 // text-related constants
