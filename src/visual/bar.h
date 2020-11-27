@@ -17,12 +17,30 @@
 #define PROGBAR_R_BORDER "\u2524"   // the right border of the progress bar
 // other
 #define PROGBAR_CHARACTER_SIZE 3    // number of bytes that make up each char
+#define PROGBAR_MIN_WIDTH 8         // minimum number of characters
 
 
 // ========================== Progress Bar Struct ========================== //
 typedef struct _ProgressBar
 {
-
+    int width;          // the total width of the printed bar/percentage
+    float percentage;   // the percent the progress bar is full
 } ProgressBar;
+
+// Takes in a width and a percentage and attempts to allocate a new ProgressBar
+// object. The dynamically-allocated pointer is returned. On failure, NULL is
+// returned. If too short of a width is given, it's instead set to
+// PROGBAR_MIN_WIDTH, and if an invalid percentage is given, it's set to 0.0 or
+// 1.0. The percentage is expected as a value between 0.0 and 1.0.
+ProgressBar* progress_bar_new(int pb_width, float pb_percent);
+
+// Takes in a ProgressBar pointer and attempts to free the memory associated
+// with the progress bar.
+void progress_bar_free(ProgressBar* bar);
+
+// Takes in a progress bar pointer and attempts to convert it to a string
+// portraying a visual progress bar. The string is dynamically allocated and a
+// pointer to it is returned. On failure, NULL is returned.
+char* progress_bar_to_string(ProgressBar* bar);
 
 #endif
