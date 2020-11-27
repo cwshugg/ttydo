@@ -18,6 +18,7 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
 int fill_box_line_with_text(char** line, int width, char* left_edge,
                             char* middle, char* right_edge, char* text);
 char** split_text_by_newline(char* text);
+int count_string_extended_unicode(char* text, int text_length);
 
 
 // ============================== Box Struct =============================== //
@@ -287,8 +288,18 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
     // if the text is NULL, return 1
     if (!text) { return 1; }
 
-    // determine how much room there is for the text
+    // count the number of extended unicode characters in the string
     int text_length = strlen(text);
+    int unicode_count = count_string_extended_unicode(text, text_length);
+    // if extended unicode characters are present, we need to adjust the text
+    // length. Each extended character takes 3 bytes
+    if (unicode_count > 0)
+    {
+        width += 2 * unicode_count;
+        *line = realloc(*line, width * BOX_CHARACTER_SIZE);
+    }
+
+    // determine how much room there is for the text
     int runoff_length = strlen(BOX_TEXT_RUNOFF);
     int available_length = (width - 2) - runoff_length + 1;
     int copied_text_length = text_length;
@@ -391,6 +402,33 @@ char** free_string_array(char** lines, int length)
 
     // return NULL
     return NULL;
+}
+
+// Helper function that takes in a string and returns the number of extended
+// unicode characters found in the string.
+int count_string_extended_unicode(char* text, int text_length)
+{
+    // check for a NULL pointer
+    if (!text) { return 0; }
+
+    // by looking at each character's integer value, we can tell if extended
+    // unicode character are being used by seeing negative integer values. We
+    // can identify an extended unicode character by seeing the following:
+    //      '-30 -X -Y'
+    // where -30 indicate the presence of an extended character.
+    char unicode_flag = (char) -30;
+    // count the number of extended unicode characters in the string
+    int unicode_count = 0;
+    for (int i = 0; i < text_length; i ++)
+    {
+        if (text[i] == unicode_flag && i < text_length - 2)
+        {
+            unicode_count += ((int) text[i + 1] < 0) &&
+                             ((int) text[i + 2] < 0);
+        }
+    }
+    
+    return unicode_count;
 }
 
 
