@@ -79,7 +79,8 @@ char* task_to_string(Task* task)
     if (task->description) { desc_length = strlen(task->description); }
 
     // allocate a string of the appropriate size
-    char* result = calloc(title_length + desc_length + 16, sizeof(char));
+    int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) + 16;
+    char* result = calloc(title_length + desc_length + pad, sizeof(char));
     if (!result) { return NULL; }
 
     // add a "[ ]" or "[X]" to use for a 'task.is_complete' indicator
@@ -165,4 +166,46 @@ uint64_t generate_task_id(char* description)
 
     // return the resulting integer
     return sum;
+}
+
+
+// ========================== File String Parsing ========================== //
+char* task_get_scribe_string(Task* task)
+{
+    // check for a NULL pointer, or a NULL title
+    if (!task) { return NULL; }
+
+    // if no title is given, use the default string
+    char* title = task->title;
+    if (!title) { title = TASK_DEFAULT_TITLE; }
+    // if no description is given, use the default string
+    char* desc = task->description;
+    if (!desc) { desc = TASK_DEFAULT_DESCRIPTION; }
+
+    // convert the task's ID to a string
+    char id_string[24] = {'\0'};
+    sprintf(id_string, "%lu", task->id);
+
+    // convert the task's 'is_complete' to a string
+    char complete_string[2] = {'\0'};
+    sprintf(complete_string, "%d", task->is_complete != 0);
+
+    // calculate the lengths of strings
+    int id_length = strlen(id_string);
+    int complete_length = strlen(complete_string);
+    int title_length = strlen(title);
+    int desc_length = strlen(desc);
+    int total_length = id_length + complete_length + title_length + desc_length;
+
+    // allocate a new string
+    int safety_pad = 16;
+    char* result = calloc(total_length + safety_pad, sizeof(char));
+    snprintf(result, total_length + safety_pad, "%s,%s,%s,%s", id_string,
+             title, desc, complete_string);
+    return result;
+}
+
+Task* task_new_from_scribe_string(char* string)
+{
+    return NULL;
 }

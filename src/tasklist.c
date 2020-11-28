@@ -290,3 +290,45 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
     // return the stack
     return stack;
 }
+
+
+// ========================== File String Parsing ========================== //
+char* task_list_get_scribe_string(TaskList* list)
+{
+    // check for a NULL pointer or a NULL 'name' pointer
+    if (!list || !list->name) { return NULL; }
+
+    // determine the length of the string we'll need
+    int name_length = strlen(list->name);
+    int length = name_length + 8;
+    char* result = calloc(length + 1, sizeof(char));
+
+    // copy the list name in, then the list size
+    strncpy(result, list->name, name_length);
+    snprintf(result + name_length, length - name_length, ",%d", list->size);
+    return result;
+}
+
+TaskList* task_list_new_from_scribe_string(char* string)
+{
+    // check for a NULL pointer
+    if (!string) { return NULL; }
+
+    // search for the first comma. Everything up to the comma represents the
+    // name of the task list
+    char* comma1 = strstr(string, ",");
+    if (!comma1) { return NULL; }
+    int name_length = comma1 - string;
+
+    // copy the name of the task list
+    char name[name_length + 1];
+    memset(name, 0, name_length + 1);
+    strncpy(name, string, name_length);
+
+    // create a new TaskList with the name
+    TaskList* result = task_list_new(name);
+    if (!result) { return NULL; }
+
+    // return the task list
+    return result;
+}

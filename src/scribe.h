@@ -3,6 +3,9 @@
 //
 //      Connor Shugg
 
+#ifndef SCRIBE_H
+#define SCRIBE_H
+
 // Module inclusions
 #include "tasklist.h"
 
@@ -14,3 +17,5 @@ int save_task_list(TaskList* list);
 // On success, a dynamically-allocated TaskList pointer is returned. Otherwise,
 // NULL is returned
 TaskList* load_task_list(char* name);
+
+#endif

@@ -21,12 +21,15 @@ int save_task_list(TaskList* list)
 {
     // if we were given a NULL pointer, return a non-zero value
     if (!list) { return 1; }
-
     // otherwise, we'll first retrieve the home directory
     char* home = get_home_directory();
-    printf("Home dir: '%s'\n", home);
 
-    // free the home directory string
+    // get the header string from the task list
+    char* header = task_list_get_scribe_string(list);
+    printf("Header string: '%s'\n", header);
+
+    // free memory
+    free(header);
     free(home);
     return 0;
 }
