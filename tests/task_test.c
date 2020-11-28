@@ -35,9 +35,13 @@ int main()
     printf("Task ID of '%s': %lu\n", t1->title, t1->id);
     task_free(t1);
     
-    t1 = task_new("TEST 5", NULL);
-    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
-    task_free(t1);
+   t1 = task_new("TEST 5", NULL);
+   printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+   task_free(t1);
+    
+   t1 = task_new("TEST 6", NULL);
+   printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+   task_free(t1);
 
     return 0;
 }

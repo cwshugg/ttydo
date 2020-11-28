@@ -114,31 +114,36 @@ char* task_to_string(Task* task)
 // http://research.cs.vt.edu/AVresearch/hashing/strings.php
 uint64_t generate_task_id(char* description)
 {
-    // if we were given a NULL pointer, we'll instead randomly generate an ID
-    int used_random = 0;
-    if (!description)
+    // make a local copy of the string with extra room
+    int filled_length = 0;
+    int string_length = 64;
+    int salt_length = 16;
+    if (description) { string_length = strlen(description); }
+    char local[string_length + salt_length + 1];
+    memset(local, 0, string_length + salt_length + 1);
+    // if we were given a string, copy it in
+    if (description)
     {
-        srand(time(NULL));
-        // allocate a new string and point 'description' at it
-        int string_length = 64;
-        description = calloc(string_length + 1, sizeof(char));
-        if (!description) { return 0; }
-        // fill the string with random characters
-        for (int i = 0; i < string_length + 1; i++)
-        { description[i] = (char) ((rand() % 96) + 32); }
-
-        // toggle the switch for later
-        used_random = 1;
+        strncpy(local, description, string_length);
+        filled_length = string_length;
     }
 
-    int length = strlen(description) / 4;
+    // use 'filled_length'  to fill the remaining characters with random
+    // gibberish. This will act as either a salt onto the given string, or
+    // a completely random string for when 'description' is NULL.
+    static int task_id_random_seeder = 0;
+    srand(time(NULL) + task_id_random_seeder++);
+    for (int i = filled_length; i < string_length + salt_length; i++)
+    { local[i] = (char) ((rand() % 96) + 32); }
+
+    int length = strlen(local) / 4;
     uint64_t sum = 0;
     // iterate through the strings characters
     for (int i = 0; i < length; i++)
     {
         // get a substring of characters
         char sub[5] = {'\0'};
-        strncpy(sub, description + (i * 4), 4);
+        strncpy(sub, local + (i * 4), 4);
 
         uint64_t multiplier = 1;
         for (int j = 0; j < strlen(sub); j++)
@@ -150,16 +155,13 @@ uint64_t generate_task_id(char* description)
 
     // for the remaining characters: perform the same action
     char sub[5] = {'\0'};
-    strncpy(sub, description + (length * 4), 4);
+    strncpy(sub, local + (length * 4), 4);
     uint64_t multiplier = 1;
     for (int i = 0; i < strlen(sub); i++)
     {
         sum += sub[i] * multiplier;
         multiplier *= 256;
     }
-
-    // if we used a random string, free it
-    if (used_random) { free(description); }
 
     // return the resulting integer
     return sum;
