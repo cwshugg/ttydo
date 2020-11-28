@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "task.h"
 
 // ====================== Helper Function Prototypes ======================= //
@@ -114,10 +115,20 @@ char* task_to_string(Task* task)
 uint64_t generate_task_id(char* description)
 {
     // if we were given a NULL pointer, we'll instead randomly generate an ID
+    int used_random = 0;
     if (!description)
     {
-        // TODO: generate a random number
-        return 0;
+        srand(time(NULL));
+        // allocate a new string and point 'description' at it
+        int string_length = 64;
+        description = calloc(string_length + 1, sizeof(char));
+        if (!description) { return 0; }
+        // fill the string with random characters
+        for (int i = 0; i < string_length + 1; i++)
+        { description[i] = (char) ((rand() % 96) + 32); }
+
+        // toggle the switch for later
+        used_random = 1;
     }
 
     int length = strlen(description) / 4;
@@ -146,6 +157,9 @@ uint64_t generate_task_id(char* description)
         sum += sub[i] * multiplier;
         multiplier *= 256;
     }
+
+    // if we used a random string, free it
+    if (used_random) { free(description); }
 
     // return the resulting integer
     return sum;
