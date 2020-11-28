@@ -8,6 +8,10 @@
 #include <string.h>
 #include "task.h"
 
+// ====================== Helper Function Prototypes ======================= //
+uint64_t generate_task_id(char* title);
+
+
 // ============================== Task Struct ============================== //
 Task* task_new(char* title, char* desc)
 {
@@ -41,6 +45,9 @@ Task* task_new(char* title, char* desc)
         strncpy(task->title, title, title_length);
     }
     else { task->title = NULL; }
+
+    // generate an ID for the task using the task description (string hashing)
+    task->id = generate_task_id(task->description);    
 
     // return the Task
     return task;
@@ -99,21 +106,47 @@ char* task_to_string(Task* task)
 }
 
 
-// ================================ Testing ================================ //
-// #include "box.h"
-// int main()
-// {
-//     Task* t1 = task_new("Task 1's Title", "Task 1's Description");
-//     char* t1_string = task_to_string(t1);
-//     printf("task with title and description:\n%s\n", t1_string);
-//     free(t1_string);
+// =========================== Helper Functions ============================ //
+// Takes in the description of a task and uses a string-folding hash algorithm
+// to generate a unique ID for a task. On failure, 0 is returned.
+// I found this algorithm here:
+// http://research.cs.vt.edu/AVresearch/hashing/strings.php
+uint64_t generate_task_id(char* description)
+{
+    // if we were given a NULL pointer, we'll instead randomly generate an ID
+    if (!description)
+    {
+        // TODO: generate a random number
+        return 0;
+    }
 
-//     Box* t1_box = box_new(0, 0, t1->title, t1->description);
-//     box_adjust_to_text(t1_box, 0);
-//     box_print(t1_box);
+    int length = strlen(description) / 4;
+    uint64_t sum = 0;
+    // iterate through the strings characters
+    for (int i = 0; i < length; i++)
+    {
+        // get a substring of characters
+        char sub[5] = {'\0'};
+        strncpy(sub, description + (i * 4), 4);
 
-//     box_free(t1_box);
-//     task_free(t1);
+        uint64_t multiplier = 1;
+        for (int j = 0; j < strlen(sub); j++)
+        {
+            sum += sub[j] * multiplier;
+            multiplier *= 256;
+        }
+    }
 
-//     return 0;
-// }
+    // for the remaining characters: perform the same action
+    char sub[5] = {'\0'};
+    strncpy(sub, description + (length * 4), 4);
+    uint64_t multiplier = 1;
+    for (int i = 0; i < strlen(sub); i++)
+    {
+        sum += sub[i] * multiplier;
+        multiplier *= 256;
+    }
+
+    // return the resulting integer
+    return sum;
+}

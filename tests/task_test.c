@@ -18,5 +18,26 @@ int main()
     box_free(t1_box);
     task_free(t1);
 
+    // test task IDs
+    t1 = task_new("TEST 1", "TEST 1");
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+    
+    t1 = task_new("TEST 2", "TEST 2");
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+    
+    t1 = task_new("TEST 3", "TEST 3");
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+    
+    t1 = task_new("TEST 4", "abcdefghijklmnopqrstuvwxyz");
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+    
+    t1 = task_new("TEST 5", NULL);
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+
     return 0;
 }

@@ -6,6 +6,9 @@
 #ifndef TASK_H
 #define TASK_H
 
+// Module inclusions
+#include <inttypes.h>
+
 // ========================= Constants and Macros ========================== //
 #define TASK_TITLE_MAX_LENGTH 32    // the max number of characters in a title
 
@@ -18,6 +21,7 @@ typedef struct _Task
 {
     char* title;            // the title of the task
     char* description;      // the description of the task
+    uint64_t id;            // unique task ID
     int is_complete;        // whether or not the task is finished
 } Task;
 
