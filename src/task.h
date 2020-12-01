@@ -23,7 +23,7 @@ typedef struct _Task
     char* title;            // the title of the task
     char* description;      // the description of the task
     uint64_t id;            // unique task ID
-    int is_complete;        // whether or not the task is finished
+    uint8_t is_complete;        // whether or not the task is finished
 } Task;
 
 // Constructor: dynamically allocates memory for a new 'Task' struct, and
