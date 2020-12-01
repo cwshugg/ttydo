@@ -10,7 +10,8 @@
 #include <inttypes.h>
 
 // ========================= Constants and Macros ========================== //
-#define TASK_TITLE_MAX_LENGTH 32    // the max number of characters in a title
+#define TASK_TITLE_MAX_LENGTH 32    // max number of chars in a title
+#define TASK_DESCRIPTION_MAX_LENGTH 512 // max number of chars in a description
 
 // default fields: used when a task has no title or description
 #define TASK_DEFAULT_TITLE "(no title)"

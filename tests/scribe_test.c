@@ -1,3 +1,4 @@
+#include <string.h>
 #include "../src/scribe.h"
 
 void remove_home_dir()
@@ -49,6 +50,25 @@ int main()
         printf("Scribe Task String: '%s'\n", ss);
         if (ss) { free(ss); }
     }
+    
+    // modify the first task to have a really long title and description
+    Task* task0 = l1->head->task;
+    // title
+    int new_title_length = TASK_TITLE_MAX_LENGTH + 8;
+    task0->title = realloc(task0->title, new_title_length + 1);
+    memset(task0->title, 0, new_title_length + 1);
+    for (int i = 0; i < new_title_length; i++)
+    { task0->title[i] = 'X'; }
+    // description
+    int new_desc_length = TASK_DESCRIPTION_MAX_LENGTH + 8;
+    task0->description = realloc(task0->description, new_desc_length + 1);
+    memset(task0->description, 0, new_desc_length + 1);
+    for (int i = 0; i < new_desc_length; i++)
+    { task0->description[i] = 'Y'; }
+    // generate a string for it to test the truncating
+    char* ss = task_get_scribe_string(task0);
+    printf("\nTruncated task string: '%s'\n", ss);
+    if (ss) { free(ss); }
 
     // try creating a header string and converting back
     char* header = task_list_get_scribe_string(l1);

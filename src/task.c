@@ -20,10 +20,24 @@ Task* task_new(char* title, char* desc)
     Task* task = calloc(1, sizeof(Task));
     if (!task) { return NULL; }
 
-    // if the description is NULL, set the task's description to NULL.
-    // Otherwise, duplicate the description string
-    if (!desc) { task->description = NULL; }
-    else { task->description = strdup(desc); }
+    // find the correct amount of chars to copy from the description
+    int desc_length = 0;
+    if (desc) { desc_length = strlen(desc); }
+    if (desc_length > TASK_DESCRIPTION_MAX_LENGTH)
+    { desc_length = TASK_DESCRIPTION_MAX_LENGTH; }
+
+    // allocate a description string - free and return NULL on failure
+    if (desc)
+    {
+        task->description = calloc(desc_length + 1, sizeof(char));
+        if (!task->description)
+        {
+            free(task);
+            return NULL;
+        }
+        // copy the description string
+        strncpy(task->description, desc, desc_length);
+    }
 
     // find the correct amount of characters to copy from the title string
     int title_length = 0;
@@ -31,14 +45,13 @@ Task* task_new(char* title, char* desc)
     if (title_length > TASK_TITLE_MAX_LENGTH)
     { title_length = TASK_TITLE_MAX_LENGTH; }
     
-    // allocate a title string - if allocation fails, free the already-alloc'd
-    // memory and return NULL
+    // allocate a title string - free and return NULL on failure
     if (title)
     {
         task->title = calloc(title_length + 1, sizeof(char));
         if (!task->title)
         {
-            free(task->description);
+            if (task->description) { free(task->description); }
             free(task);
             return NULL;
         }
@@ -197,6 +210,23 @@ char* task_get_scribe_string(Task* task)
     int desc_length = strlen(desc);
     int total_length = id_length + complete_length + title_length + desc_length;
 
+    // adjust the lengths of the title and description to fit their maximum
+    // length bounds (TASK_TITLE_MAX_LENGTH, TASK_DESCRIPTION_MAX_LENGTH)
+    if (task->title && title_length > TASK_TITLE_MAX_LENGTH)
+    {
+        title_length = TASK_TITLE_MAX_LENGTH;
+        task->title = realloc(task->title, (title_length + 1) * sizeof(char));
+        task->title[title_length] = '\0';
+        title = task->title;
+    }
+    if (task->description && desc_length > TASK_DESCRIPTION_MAX_LENGTH)
+    {
+        desc_length = TASK_DESCRIPTION_MAX_LENGTH;
+        task->description = realloc(task->description, (desc_length + 1) * sizeof(char));
+        task->description[desc_length] = '\0';
+        desc = task->description;
+    }
+
     // allocate a new string
     int safety_pad = 16;
     char* result = calloc(total_length + safety_pad, sizeof(char));
@@ -207,5 +237,13 @@ char* task_get_scribe_string(Task* task)
 
 Task* task_new_from_scribe_string(char* string)
 {
+    // check for a NULL string pointer
+    if
+     (!string) { return NULL; }
+    //int length = strlen(string);
+
+
+    // count the number of commas in the string
+    //for (int i =)
     return NULL;
 }

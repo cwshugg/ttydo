@@ -22,26 +22,34 @@ int main()
     t1 = task_new("TEST 1", "TEST 1");
     printf("Task ID of '%s': %lu\n", t1->title, t1->id);
     task_free(t1);
-    
+
     t1 = task_new("TEST 2", "TEST 2");
     printf("Task ID of '%s': %lu\n", t1->title, t1->id);
     task_free(t1);
-    
+
     t1 = task_new("TEST 3", "TEST 3");
     printf("Task ID of '%s': %lu\n", t1->title, t1->id);
     task_free(t1);
-    
+
     t1 = task_new("TEST 4", "abcdefghijklmnopqrstuvwxyz");
     printf("Task ID of '%s': %lu\n", t1->title, t1->id);
     task_free(t1);
-    
-   t1 = task_new("TEST 5", NULL);
-   printf("Task ID of '%s': %lu\n", t1->title, t1->id);
-   task_free(t1);
-    
-   t1 = task_new("TEST 6", NULL);
-   printf("Task ID of '%s': %lu\n", t1->title, t1->id);
-   task_free(t1);
+
+    t1 = task_new("TEST 5", NULL);
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+
+    t1 = task_new("TEST 6", NULL);
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    task_free(t1);
+
+    char description[TASK_DESCRIPTION_MAX_LENGTH + 8] = {'\0'};
+    for (int i = 0; i < TASK_DESCRIPTION_MAX_LENGTH + 7; i++)
+    { description[i] = 'X'; }
+    t1 = task_new("TEST 7'S TITLE IS WAY TOO LONG! LET'S SEE IF IT GETS CUT OFF", description);
+    printf("Task ID of '%s': %lu\n", t1->title, t1->id);
+    printf("Description: '%s'\n", t1->description);
+    task_free(t1);
 
     return 0;
 }
