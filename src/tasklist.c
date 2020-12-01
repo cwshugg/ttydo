@@ -300,7 +300,10 @@ char* task_list_get_scribe_string(TaskList* list)
 
     // determine the length of the string we'll need
     int name_length = strlen(list->name);
+    if (name_length > TASK_LIST_NAME_MAX_LENGTH)
+    { name_length = TASK_LIST_NAME_MAX_LENGTH; }
     int length = name_length + 8;
+    // allocate the string accordingly
     char* result = calloc(length + 1, sizeof(char));
 
     // copy the list name in, then the list size
@@ -319,6 +322,10 @@ TaskList* task_list_new_from_scribe_string(char* string)
     char* comma1 = strstr(string, ",");
     if (!comma1) { return NULL; }
     int name_length = comma1 - string;
+
+    // adjust the name length as needed (to ensure it's below the maximum)
+    if (name_length > TASK_LIST_NAME_MAX_LENGTH)
+    { name_length = TASK_LIST_NAME_MAX_LENGTH; }
 
     // copy the name of the task list
     char name[name_length + 1];
