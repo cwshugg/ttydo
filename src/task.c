@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 #include "task.h"
 
 // ====================== Helper Function Prototypes ======================= //
@@ -231,19 +232,72 @@ char* task_get_scribe_string(Task* task)
     int safety_pad = 16;
     char* result = calloc(total_length + safety_pad, sizeof(char));
     snprintf(result, total_length + safety_pad, "%s,%s,%s,%s", id_string,
-             title, desc, complete_string);
+             complete_string, title, desc);
     return result;
 }
 
 Task* task_new_from_scribe_string(char* string)
 {
     // check for a NULL string pointer
-    if
-     (!string) { return NULL; }
-    //int length = strlen(string);
+    if (!string) { return NULL; }
 
+    // This string is likely coming straight from a file. To be safe, we need
+    // to impose a maximum length the string can have.
+    int length = strlen(string);
+    int max_length = TASK_TITLE_MAX_LENGTH + TASK_DESCRIPTION_MAX_LENGTH + 32;
+    if (length > max_length) { length = max_length; }
 
-    // count the number of commas in the string
-    //for (int i =)
-    return NULL;
+    // make a local copy of the string of the correct length
+    char local[length + 1];
+    memset(local, 0, length + 1);
+    strncpy(local, string, length);
+    
+    // from here, we'll collect each comma-separated value, one at a time, to
+    // build a new Task struct
+    errno = 0;
+    // ---------- PIECE 1: Task ID ---------- //
+    char* id_string = strtok(local, ",");
+    if (!id_string) { return NULL; }
+    // attempt to extract the 64-bit integer
+    char* end = NULL;
+    uint64_t id = strtol(id_string, &end, 10);
+    if (errno) { return NULL; }
+    
+    // ---------- PIECE 2: is_complete ---------- //
+    char* complete_string = strtok(NULL, ",");
+    if (!complete_string) { return NULL; }
+    // attempt to extract the integer
+    uint8_t is_complete = strtol(complete_string, &end, 10);
+    if (errno) { return NULL; }
+    
+    // ---------- PIECE 3: title ---------- //
+    // this may or may not be NULL, if the string given was too short.
+    // if it IS NULL, we'll keep it, since we can initialize a Task with a
+    // NULL title
+    char* title = strtok(NULL, ",");
+    
+    // ---------- PIECE 4: description ---------- //
+    // the same goes for the description as it does for the title: if it's
+    // NULL, we'll keep the NULL value.
+    char* description = strtok(NULL, ",");
+
+    // create a new Task* struct
+    Task* result = task_new(title, description);
+    if (!result) { return NULL; }
+
+    // override the ID field (in case it was generated differently) and set
+    // the 'is_complete' field
+    result->id = id;
+    result->is_complete = is_complete;
+    
+    // printf("Found ID: %lu\n", result->id);
+    // printf("Complete? %d\n", result->is_complete);
+    // printf("Title:    '%s'\n", result->title);
+    // printf("Desc:     '%s'\n\n", result->description);
+
+    // char* str = task_to_string(result);
+    // printf("Task created:%s\n", str);
+    // if (str) { free(str); }
+
+    return result;
 }

@@ -9,6 +9,52 @@ void remove_home_dir()
     printf("Home directory delete result: %d\n", result);
 }
 
+void test_scribe_string_to_task()
+{
+    // test a normal task string
+    char* string1 = "11111111111111,0,TITLE TEST,DESCRIPTION TEST";
+    Task* task1 = task_new_from_scribe_string(string1);
+    if (task1) { task_free(task1); }
+    
+    // test a task string that's too long
+    char string2[1024] = {'\0'};
+    sprintf(string2, "12345678,1,THIS TITLE IS TOO LONG! IT'LL GET CUT OFF... HOPEFULLY,");
+    for (int i = 0; i < 600; i++)
+    { strncat(string2, "X", 1); }
+    Task* task2 = task_new_from_scribe_string(string2);
+    if (task2) { task_free(task2); }
+
+    // test a string that only has an ID and 'is_complete' flag
+    char* string3 = "222222,1";
+    Task* task3 = task_new_from_scribe_string(string3);
+    if (task3) { task_free(task3); }
+
+    // test a string without a description
+    char* string4 = "333333,0,title";
+    Task* task4 = task_new_from_scribe_string(string4);
+    if (task4) { task_free(task4); }
+
+    // test a string with empty fields
+    char* string5 = "444444,0,,";
+    Task* task5 = task_new_from_scribe_string(string5);
+    if (task5) { task_free(task5); }
+
+    // test a string with ONLY an ID
+    char* string6 = "5555555";
+    Task* task6 = task_new_from_scribe_string(string6);
+    if (task6) { task_free(task6); }
+
+    // test a string with ONLY an ID and commas
+    char* string7 = "666666,,,";
+    Task* task7 = task_new_from_scribe_string(string7);
+    if (task7) { task_free(task7); }
+
+    // test a string with ONLY commas
+    char* string8 = ",,,";
+    Task* task8 = task_new_from_scribe_string(string8);
+    if (task8) { task_free(task8); }
+}
+
 int main()
 {
     // create a new task list
@@ -52,6 +98,7 @@ int main()
     }
     
     // modify the first task to have a really long title and description
+    // --------------------------------------------- //
     Task* task0 = l1->head->task;
     // title
     int new_title_length = TASK_TITLE_MAX_LENGTH + 8;
@@ -69,6 +116,10 @@ int main()
     char* ss = task_get_scribe_string(task0);
     printf("\nTruncated task string: '%s'\n", ss);
     if (ss) { free(ss); }
+    // --------------------------------------------- //
+
+    // perform more tests with task-->string conversion
+    test_scribe_string_to_task();
 
     // try creating a header string and converting back
     char* header = task_list_get_scribe_string(l1);
@@ -87,5 +138,3 @@ int main()
     // delete home directory
     remove_home_dir();
 }
-
-
