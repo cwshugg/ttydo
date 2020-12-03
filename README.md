@@ -11,7 +11,7 @@ Here's an example of what a single task list in ttydo might look like:
 │ [X] Implement search/sort: Implement a way to search for <whatevers> and sort them by <whatever>.  │
 │ [ ] Create PR: Create a pull request once all the above tasks are done.                            │
 ├─ Progress ─────────────────────────────────────────────────────────────────────────────────────────┤
-│ 33%  [==============================                                                             ] │
+│ 33%  ├██████████████████████████████─────────────────────────────────────────────────────────────┤ │
 └────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -19,6 +19,5 @@ Here's an example of what a single task list in ttydo might look like:
 # Future Goals
 These are things that I'd like to implement into `ttydo`:
 
-- Give tasks a unique ID
 - Add the ability for tasks to have @tags
   - Let tasks be searchable/displayed by tags
