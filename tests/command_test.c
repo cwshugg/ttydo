@@ -11,10 +11,15 @@ int handler(char** args)
 
 int main()
 {
-    Command* c1 = command_new("Command name", "This is the command's description.",
-                              "c", "command", handler);
-    printf("New command:\n");
+    Command* c1 = command_new("Fart",
+        "Makes your computer fart. Takes in a single argument.\nUsage: \"f/fart\"",
+        "f", "fart", handler);
+    printf("New command:\n-----\n");
     command_print(c1);
+    printf("-----\n");
+
+    // run the command's handler
+    c1->handler(NULL);
 
     // free the command
     command_free(c1);
