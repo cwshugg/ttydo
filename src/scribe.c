@@ -5,6 +5,7 @@
 // Module inclusions
 #include <string.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include "scribe.h"
 
 // =============== Constants and Helper Function Prototypes ================ //
@@ -30,15 +31,35 @@ int save_task_list(TaskList* list)
     // first, we'll get a path to the file we'll write to
     char* file_path = make_task_list_file_path(list->name);
     if (!file_path) { return 1; }
-    printf("File Path: '%s'\n", file_path);
+    // open the file with write permissions (free and return on failure)
+    FILE* file = fopen(file_path, "w");
+    if (!file)
+    {
+        free(file_path);
+        if (errno) { return errno; }
+        return 1;
+    }
 
-    // get the header string from the task list
+    // get the header string from the task list and write it out
     char* header = task_list_get_scribe_string(list);
-    printf("Header string: '%s'\n", header);
+    fprintf(file, "%s\n", header);
 
     // iterate through the task list
+    TaskListElem* current = list->head;
+    int i = 0;
+    while (i++ < list->size && current)
+    {
+        // get a task string and write it out to the file
+        char* task_string = task_get_scribe_string(current->task);
+        fprintf(file, "%s\n", task_string);
+        free(task_string);
 
-    // free memory
+        // increment pointer
+        current = current->next;
+    }
+
+    // free memory and close the file pointer
+    fclose(file);
     free(header);
     free(file_path);
     return 0;
@@ -46,11 +67,59 @@ int save_task_list(TaskList* list)
 
 // Takes in the name of a TaskList and attempts to load it in from disk.
 // On success, a dynamically-allocated TaskList pointer is returned. Otherwise,
-// NULL is returned
+// NULL is returned.
 TaskList* load_task_list(char* name)
 {
-    // TODO
-    return NULL;
+    // check for a null parameter
+    if (!name) { return NULL; }
+
+    // using the name, we'll generate the path at which the file is stored
+    char* file_path = make_task_list_file_path(name);
+    if (!file_path) { return NULL; }
+    // attempt to open the file with read permission
+    FILE* file = fopen(file_path, "r");
+    if (!file)
+    {
+        free(file_path);
+        return NULL;
+    }
+
+    // determine a maximum line length to read
+    size_t max_line_length = TASK_LIST_NAME_MAX_LENGTH + TASK_TITLE_MAX_LENGTH +
+                             TASK_DESCRIPTION_MAX_LENGTH + 32;
+
+    // read the first line - this should be the header string.
+    // on failure, free all and return
+    char* buffer = calloc(max_line_length + 1, sizeof(char));
+    size_t read_amount = getline(&buffer, &max_line_length, file);
+    if (read_amount <= 0)
+    {
+        free(file_path);
+        free(buffer);
+        fclose(file);
+    }
+    TaskList* list = task_list_new_from_scribe_string(buffer);
+
+    // iterate through the remaining lines and interpret them as tasks
+    while (getline(&buffer, &max_line_length, file) > 0)
+    {
+        // if there's a '\n' at the end of the string, replace it with
+        // a string terminator
+        char* newline = strstr(buffer, "\n");
+        if (newline) { *newline = '\0'; }
+        // attempt to convert the string into a Task object. If one was
+        // successfully created, add it to the task list
+        Task* task = task_new_from_scribe_string(buffer);
+        if (task)
+        { task_list_append(list, task); }
+    }
+
+    // close the file and free memory
+    fclose(file);
+    free(file_path);
+    free(buffer);
+
+    return list;
 }
 
 
@@ -83,7 +152,8 @@ char* get_home_directory()
     if (stat(TTYDO_HOME_DIR, &home_stats) || !S_ISDIR(home_stats.st_mode))
     {
         // attempt to create the directory
-        if (mkdir(TTYDO_HOME_DIR, 0664) == -1)
+        int make_result = mkdir(TTYDO_HOME_DIR, 0777);
+        if (make_result == -1)
         {
             fprintf(stderr, "Internal error: couldn't create home directory: '%s'."
                     " Try creating the directory manually.\n", TTYDO_HOME_DIR);

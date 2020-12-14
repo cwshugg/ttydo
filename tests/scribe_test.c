@@ -1,5 +1,6 @@
 #include <string.h>
 #include "../src/scribe.h"
+#include "../src/visual/terminal.h"
 
 void remove_home_dir()
 {
@@ -131,10 +132,22 @@ int main()
     // attempt to save the list
     int result = save_task_list(l1);
     printf("\nSave result for task list '%s': %d\n", l1->name, result);
+
+    // re-load the task list
+    TaskList* loaded_list = load_task_list(l1->name);
+    if (loaded_list)
+    {
+        BoxStack* bs = task_list_to_box_stack(loaded_list, get_terminal_width());
+        printf("Loaded task list:\n");
+        box_stack_print(bs);
+        box_stack_free(bs);
+    }
+
     
-    // free the task list
+    // free the task list(s)
     task_list_free(l1);
+    if (loaded_list) { task_list_free(loaded_list); }
 
     // delete home directory
-    remove_home_dir();
+    //remove_home_dir();
 }
