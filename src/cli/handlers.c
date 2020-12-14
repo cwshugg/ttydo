@@ -18,8 +18,8 @@
 extern int NUM_COMMANDS;    // reference to command count
 extern Command** commands;  // reference to command array
 // Task list globals
-extern int TASKLIST_ARRAY_CAPACITY;
-extern int TASKLIST_ARRAY_LENGTH;
+extern int tasklist_array_capacity;
+extern int tasklist_array_length;
 extern TaskList** tasklists;
 
 
@@ -30,6 +30,10 @@ int handle_help(int argc, char** args)
     // make sure our command array is initialized
     if (!commands)
     { fatality(1, "Commands not initialized."); }
+
+    // print the logo
+    print_logo(NULL);
+    printf("A command-line task tracker.\n");
 
     // we'll make a generous guess that each command string will be under 256
     // characters. Since each will also have a '\n'.... we'll just round up to
@@ -93,7 +97,7 @@ int handle_list(int argc, char** args)
     // if we weren't given any arguments, print and return
     if (argc == 0)
     {
-        if (TASKLIST_ARRAY_LENGTH == 0)
+        if (tasklist_array_length == 0)
         {
             printf("Looks like you don't have any task lists.\n");
             printf("Try 'ttydo list new' to make one.\n");

@@ -18,8 +18,8 @@
 extern int NUM_COMMANDS;    // number of commands
 extern Command** commands;  // dynamically-allocated command array
 // Task list globals
-extern int TASKLIST_ARRAY_CAPACITY; // initial cap of our global tasklist array
-extern int TASKLIST_ARRAY_LENGTH;   // number of task lists in the array
+extern int tasklist_array_capacity; // initial cap of our global tasklist array
+extern int tasklist_array_length;   // number of task lists in the array
 extern TaskList** tasklists;        // global array of task lists
 // Function prototypes
 void clean_up();
@@ -65,11 +65,31 @@ void clean_up()
 // ========================== Printing Functions =========================== //
 void print_intro()
 {
-    char* logo_prefix = "";
-    printf("%s=============================\n", logo_prefix);
-    print_logo(logo_prefix);
-    printf("%s=============================\n", logo_prefix);
-    printf("A command-line task tracker. Try 'ttydo help' to see what you can do.\n");
+    // check our tasklist array - if we don't have any task lists, print the
+    // logo and a help message
+    if (tasklists && tasklist_array_length == 0)
+    {
+        print_logo(NULL);
+        printf("A command-line task tracker. Try 'ttydo help' to see what you can do with it.\n");
+        return;
+    }
+
+    // otherwise, we'll print out the lists currently stored
+    int print_amount = tasklist_array_length;
+    printf("You have %d task lists.\n", tasklist_array_length);
+
+    // iterate and print each in box form
+    for (int i = 0; i < print_amount; i++)
+    {
+        if (!tasklists[i]) { continue; }
+
+        BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
+        if (!bs)
+        { fprintf(stderr, "Error: couldn't print task list: %s.\n", tasklists[i]->name); }
+
+        box_stack_print(bs);
+        box_stack_free(bs);
+    }
 }
 
 void print_logo(char* prefix)
@@ -153,10 +173,10 @@ int tasklist_array_init()
     // for our list array (with a minimum value of 8)
     if (list_cap > 3) { list_cap = 1 << list_cap; }
     else { list_cap = 8; }
-    TASKLIST_ARRAY_CAPACITY = list_cap;
+    tasklist_array_capacity = list_cap;
 
     // use the capacity to create an appropriately-size array
-    tasklists = calloc(TASKLIST_ARRAY_CAPACITY, sizeof(TaskList*));
+    tasklists = calloc(tasklist_array_capacity, sizeof(TaskList*));
     if (!tasklists)
     { return 1; }
 
@@ -165,7 +185,7 @@ int tasklist_array_init()
     {
         // load the file, increase the array length, and free the path string
         tasklists[i] = load_task_list(list_paths[i]);
-        TASKLIST_ARRAY_LENGTH++;
+        tasklist_array_length++;
         free(list_paths[i]);
     }
     free(list_paths);
@@ -175,9 +195,14 @@ int tasklist_array_init()
 
 void tasklist_array_free()
 {
-    // iterate up to TASKLIST_ARRAY_LENGTH times and free each tasklist
-    for (int i = 0; i < TASKLIST_ARRAY_LENGTH; i++)
-    { task_list_free(tasklists[i]); }
+    if (!tasklists) { return; }
+
+    if (tasklist_array_length > 0)
+    {
+        // iterate up to tasklist_array_length times and free each tasklist
+        for (int i = 0; i < tasklist_array_length; i++)
+        { task_list_free(tasklists[i]); }
+    }
 
     // free the tasklist pointer itself and set it back to NULL
     free(tasklists);

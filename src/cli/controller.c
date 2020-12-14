@@ -16,8 +16,8 @@
 int NUM_COMMANDS = 2;       // number of commands in the array
 Command** commands = NULL;  // global array of commands
 // Task list globals
-int TASKLIST_ARRAY_CAPACITY = 8; // initial cap of our global tasklist array
-int TASKLIST_ARRAY_LENGTH = 0;   // number of task lists in the array
+int tasklist_array_capacity = 8; // initial cap of our global tasklist array
+int tasklist_array_length = 0;   // number of task lists in the array
 TaskList** tasklists = NULL;     // global array of task lists
 // Function prototypes
 void init_commands();
@@ -28,16 +28,16 @@ int execute_command(int argc, char** args);
 // parse them into a command. If a matching command is found, it's executed.
 int main(int argc, char** argv)
 {
+    // initialize the command array and our global task list
+    init_commands();
+    tasklist_array_init();
+
     // if we were given no arguments, print the intro and exit
     if (argc == 1)
     {
         print_intro();
         finish();
     }
-
-    // initialize the command array and our global task list
-    init_commands();
-    tasklist_array_init();
 
     // take the command-line arguments (minus the first one) and match them up
     // to a command. Save the return value
