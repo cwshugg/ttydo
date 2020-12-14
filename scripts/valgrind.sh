@@ -7,5 +7,5 @@ cd $script_dir/..
 # compile with debug symbols
 make clean all-debug;
 # run with valgrind
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ttydo
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ttydo $@
 

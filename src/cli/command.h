@@ -22,7 +22,7 @@ typedef struct _Command
 // Takes in parameters to fill in all the fields of a new command struct and
 // attempts to create a new dynamically-allocated command. Returns the command
 // on success and NULL on failure.
-Command* command_new(char* n, char* d, char* s, char* l, int (*h)(char** args));
+Command* command_new(char* n, char* s, char* l, char* d, int (*h)(char** args));
 
 // Takes in a command pointer and attempts to free all of its memory.
 void command_free(Command* comm);

@@ -9,7 +9,7 @@
 #include "command.h"
 
 // ======================== Header Implementations ========================= //
-Command* command_new(char* n, char* d, char* s, char* l, int (*h)(char** args))
+Command* command_new(char* n, char* s, char* l, char* d, int (*h)(char** args))
 {
     // check for null pointers
     if (!n || !d || !s || !l || !h)
