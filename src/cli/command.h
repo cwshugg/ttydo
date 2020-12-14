@@ -31,4 +31,8 @@ void command_free(Command* comm);
 // message on how the command is used.
 void command_print(Command* comm);
 
+// Takes a command pointer and attempts to write out its details to a single-
+// -line string. The string is returned on success, and NULL on error.
+char* command_to_string(Command* comm);
+
 #endif

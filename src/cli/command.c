@@ -61,3 +61,21 @@ void command_print(Command* comm)
     printf("Command: %s ('%s' or '%s')\n%s\n", comm->name, comm->shorthand,
            comm->longhand, comm->description);
 }
+
+char* command_to_string(Command* comm)
+{
+    // check for null pointer
+    if (!comm) { return NULL; }
+
+    // print the command short/long hand into one string
+    char left_side[128];
+    sprintf(left_side, "%s/%s", comm->longhand, comm->shorthand);
+
+    int cap = 256;
+    char* result = calloc(cap + 1, sizeof(char));
+    if (!result) { return NULL; }
+    snprintf(result, cap, "%-16s %s", left_side, comm->description);
+
+    // return the created string
+    return result;
+}

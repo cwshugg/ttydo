@@ -2,6 +2,9 @@
 //
 //      Connor Shugg
 
+#ifndef UTILS_H
+#define UTILS_H
+
 // ========================= Error/Exit Functions ========================== //
 // Helper function that is used to print an error message to stderr, then exit
 // the program, due to some internal "fatal" error. If no message is provided,
@@ -21,3 +24,5 @@ void print_intro();
 // Prints an ascii/box art logo for ttydo. Takes in a 'prefix' string that's
 // printed before each line of the logo.
 void print_logo(char* prefix);
+
+#endif
