@@ -268,6 +268,7 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
     // calculate the percentage of tasks completed and the width of the
     // progress bar.
     float percent_complete = (float) tasks_complete / (float) list->size;
+    if (tasks_complete == 0) { percent_complete = 0.0; }
     int progbar_width = text_box->width - 4;
     if (fill_width) { progbar_width = get_terminal_width() - 4; }
     // create a new progress bar

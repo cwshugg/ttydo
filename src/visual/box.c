@@ -65,6 +65,10 @@ void box_adjust_to_text(Box* box, int force_readjust)
     // if we received a NULL box, return
     if (!box) { return; }
 
+    // if the box's text is an empty string (or NULL), return
+    if (!box->text || strlen(box->text) == 0)
+    { return; }
+
     char** lines = split_text_by_newline(box->text);
     if (!lines) { return; }
 
@@ -337,6 +341,15 @@ char** split_text_by_newline(char* text)
 {
     // check for a NULL string
     if (!text) { return NULL; }
+
+    // if the text is an empty string, return a char** containing a single
+    // empty string
+    if (strlen(text) == 0)
+    {
+        char** result = calloc(2, sizeof(char*));
+        *result = calloc(1, sizeof(char));
+        return result;
+    }
 
     // iterate through the string and count the number of "\n" occurrences
     int text_length = strlen(text);
