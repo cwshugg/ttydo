@@ -17,6 +17,7 @@
 #define TASK_DEFAULT_TITLE "(no title)"
 #define TASK_DEFAULT_DESCRIPTION "(no description)"
 
+
 // ============================== Task Struct ============================== //
 typedef struct _Task
 {
