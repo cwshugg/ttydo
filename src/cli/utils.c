@@ -160,9 +160,6 @@ int tasklist_array_init()
     if (!tasklists)
     { return 1; }
 
-    for (int i = 0; i < list_count; i++)
-    { printf("Task list: %s\n", list_paths[i]); }
-
     // iterate through the task list files and load them into memory
     for (int i = 0; i < list_count; i++)
     {
@@ -170,18 +167,8 @@ int tasklist_array_init()
         tasklists[i] = load_task_list(list_paths[i]);
         TASKLIST_ARRAY_LENGTH++;
         free(list_paths[i]);
-
-        BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
-        if (bs)
-        {
-            printf("Loaded task list:\n");
-            box_stack_print(bs);
-            box_stack_free(bs);
-        }
     }
     free(list_paths);
-
-    printf("Task list array length: %d\n", TASKLIST_ARRAY_LENGTH);
 
     return 0;
 }
