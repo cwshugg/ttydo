@@ -80,17 +80,33 @@ void print_intro()
     else
     { printf("You have %d task lists.\n", tasklist_array_length); }
 
+    // count those that actually have tasks
+    int filled_amount = 0;
+    for (int i = 0; i < tasklist_array_length; i++)
+    { filled_amount += tasklists[i]->size > 0; }
+    
+    // print a message about only SOME being full
+    if (tasklist_array_length > filled_amount)
+    {
+        if (filled_amount == 1)
+        { printf("Only 1 has tasks in it.\n"); }
+        else
+        { printf("Only %d have tasks in them.\n", filled_amount); }
+    }
+
     // iterate and print each in box form
     for (int i = 0; i < print_amount; i++)
     {
-        if (!tasklists[i]) { continue; }
+        // only print if the list has tasks
+        if (tasklists[i]->size > 0)
+        {
+            BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
+            if (!bs)
+            { fprintf(stderr, "Error: couldn't print task list: %s.\n", tasklists[i]->name); }
 
-        BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
-        if (!bs)
-        { fprintf(stderr, "Error: couldn't print task list: %s.\n", tasklists[i]->name); }
-
-        box_stack_print(bs);
-        box_stack_free(bs);
+            box_stack_print(bs);
+            box_stack_free(bs);
+        }
     }
 }
 

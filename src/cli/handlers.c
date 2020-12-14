@@ -122,6 +122,32 @@ int handle_list(int argc, char** args)
             sprintf(number, "%d.", i);
             printf("%-3s %s\n", number, tasklists[i]->name);
         }
+        return 0;
     }
+
+    // check for the 'new'/'n' command
+    if (!strcmp(args[0], "n") || !strcmp(args[0], "new"))
+    {
+        if (argc < 2)
+        {
+            printf("Usage: \"list new <NAME>\"\n");
+            return 0;
+        }
+
+        // make a new task list
+        char* name = args[1];
+        TaskList* list = task_list_new(name);
+        if (!list)
+        { fatality(1, "Failed to allocate memory for a new task list."); }
+
+        // save add the new task list
+        int add_result = tasklist_array_add(list);
+        if (add_result)
+        { fatality(1, "Failed to add new task list to the global array."); }
+
+        printf("Successfully created a new list ('%s').\n", name);
+        return 0;
+    }
+
     return 0;
 }
