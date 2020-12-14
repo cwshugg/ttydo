@@ -8,17 +8,20 @@
 #include <string.h>
 #include "utils.h"
 #include "command.h"
-#include "../visual/box.h"
-#include "../visual/terminal.h"
+#include "handlers.h"
+#include "../tasklist.h"
 
 // ======================= Globals/Macros/Prototypes ======================= //
-// Globals
-int NUM_COMMANDS = 2;
-Command** commands = NULL;
+// Command globals
+int NUM_COMMANDS = 2;       // number of commands in the array
+Command** commands = NULL;  // global array of commands
+// Task list globals
+int TASKLIST_ARRAY_CAPACITY = 8; // initial cap of our global tasklist array
+int TASKLIST_ARRAY_LENGTH = 0;   // number of task lists in the array
+TaskList** tasklists = NULL;     // global array of task lists
 // Function prototypes
 void init_commands();
-int handle_help(char** args);
-int handle_list(char** args);
+int execute_command(int argc, char** args);
 
 // ============================= Main Function ============================= //
 // Main function - takes in the user's command-line arguments and attempts to
@@ -35,8 +38,11 @@ int main(int argc, char** argv)
     // initialize the command array
     init_commands();
 
-    // TEST PRINT HELP
-    handle_help(NULL);
+    // take the command-line arguments (minus the first one) and match them up
+    // to a command. Save the return value
+    int result = execute_command(argc - 1, argv + 1);
+    if (result < 0)
+    { fatality(1, "Command not found. (Try 'ttydo help')"); }
 
     // clean up and exit
     finish();
@@ -63,74 +69,34 @@ void init_commands()
         handle_list);
 }
 
-
-// =========================== Command Handlers ============================ //
-// Handler for the 'help' command.
-int handle_help(char** args)
+// Searches the command list for a command with the name given by the
+// command-line arguments. If one is found, it's handler is executed, and its
+// return value is returned. Otherwise, -1 is returned.
+int execute_command(int argc, char** args)
 {
     // make sure our command array is initialized
     if (!commands)
     { fatality(1, "Commands not initialized."); }
 
-    // we'll make a generous guess that each command string will be under 256
-    // characters. Since each will also have a '\n'.... we'll just round up to
-    // 300 to be safe.
-    char* box_string = calloc(300 * NUM_COMMANDS, sizeof(char));
-    if (!box_string) { return 1; }
+    // extract the first command-line argument: the command name
+    char* command = *args;
 
-    // iterate through each command build a giant string to go in a box
-    int longest_length = 0;
-    for (int i = 0; i < NUM_COMMANDS; i++)
+    // iterate through the array of commands and try to match
+    Command* comm = NULL;
+    int i = 0;
+    while (i < NUM_COMMANDS && !comm)
     {
-        // make the string, append it to the master string, then free it
-        char* comm_string = command_to_string(commands[i]);
-        strcat(box_string, comm_string);
-
-        // append a newline, if necessary
-        if (i < NUM_COMMANDS - 1)
-        { strcat(box_string, "\n"); }
-
-        // update the maximum line length
-        int length = strlen(comm_string) + 1;
-        if (length > longest_length)
-        { longest_length = length; }
-
-        // free the command string
-        free(comm_string);
+        // if the shorthand OR longhand string matches, we found a command
+        if (!strcmp(commands[i]->shorthand, command) ||
+            !strcmp(commands[i]->longhand, command))
+        { comm = commands[i]; }
+        i++;
     }
-    
-    // check the terminal width - if it's not long enough to print a box,
-    // we'll instead print out the commands without a box (so the text will
-    // wrap around)
-    int terminal_width = get_terminal_width();
-    if (longest_length + 4 > terminal_width)
-    {
-        printf("Support commands:\n");
-        for (int i = 0; i < terminal_width; i++) { printf("-"); }
-        printf("\n%s\n", box_string);
-        for (int i = 0; i < terminal_width; i++) { printf("-"); }
-        printf("\n");
 
-        // free the box string and return
-        free(box_string);
-        return 0;
-    }
-    
-    // create a box and free the master string (since the box will copy it)
-    Box* box = box_new(0, 0, "Supported Commands", box_string);
-    free(box_string);
-    if (!box)
-    { return 1; }
+    // pass the remaining command-line arguments onto the command handler
+    if (comm)
+    { return comm->handler(argc - 1, args + 1); }    
 
-    // adjust the box to fit the text, print, and free it
-    box_adjust_to_text(box, 1);
-    box_print(box);
-    box_free(box);
-    return 0;
-}
-
-// The 'list' command handler
-int handle_list(char** args)
-{
-    return 0;
+    // if no command could be found, return -1
+    return -1;
 }

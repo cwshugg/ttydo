@@ -5,13 +5,20 @@
 // Module inclusions
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "utils.h"
 #include "command.h"
+#include "../visual/terminal.h"
+#include "../tasklist.h"
 
 // ======================= Globals/Macros/Prototypes ======================= //
-// Globals
+// Command globals
 extern int NUM_COMMANDS;    // number of commands
 extern Command** commands;  // dynamically-allocated command array
+// Task list globals
+extern int TASKLIST_ARRAY_CAPACITY; // initial cap of our global tasklist array
+extern int TASKLIST_ARRAY_LENGTH;   // number of task lists in the array
+extern TaskList** tasklists;        // global array of task lists
 // Function prototypes
 void clean_up();
 
@@ -88,4 +95,53 @@ void print_logo(char* prefix)
     printf("   \u2588\u2584\u2584\u2584\u2580");
     //       ---------- O bottom ----------
     printf(" \u2580\u2584\u2584\u2584\u2580\n");
+}
+
+void print_box_terminal_safe(char* title, char* text)
+{
+    int terminal_width = get_terminal_width();
+
+    // print title
+    int top_line_chars_remaining = terminal_width;
+    if (title)
+    {
+        int title_length = strlen(title) + 2;
+        if (title_length < terminal_width)
+        { top_line_chars_remaining -= title_length + 2; }
+
+        printf("%s%s %s ", BOX_H_LINE, BOX_H_LINE, title);
+    }
+    // print remainder of top line
+    for (int i = 0; i < top_line_chars_remaining; i++)
+    { printf("%s", BOX_H_LINE); }
+
+    // print box text
+    if (text)
+    { printf("\n%s\n", text); }
+
+    // print bottom line and newline
+    for (int i = 0; i < terminal_width; i++)
+    { printf("%s", BOX_H_LINE); }
+    printf("\n");
+}
+
+// ======================= Task List Array Functions ======================= //
+int tasklist_array_init()
+{
+    // use the capacity to create an appropriately-size array
+    tasklists = calloc(TASKLIST_ARRAY_CAPACITY, sizeof(TaskList*));
+    if (!tasklists)
+    { return 1; }
+
+    return 0;
+}
+
+void tasklist_array_free()
+{
+    // iterate up to TASKLIST_ARRAY_LENGTH times and free each tasklist
+    // TODO
+
+    // free the tasklist pointer itself and set it back to NULL
+    free(tasklists);
+    tasklists = NULL;
 }
