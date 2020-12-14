@@ -7,6 +7,11 @@
 
 // Module inclusions
 #include "../visual/box.h"
+#include "../tasklist.h"
+
+// ================================ Macros ================================= //
+#define H_LINE "\u2500" // used for various prints in the CLI
+
 
 // ========================= Error/Exit Functions ========================== //
 // Helper function that is used to print an error message to stderr, then exit
@@ -34,6 +39,10 @@ void print_logo(char* prefix);
 // terminal.
 void print_box_terminal_safe(char* title, char* text);
 
+// Takes in a certain length and prints out 'length' number of H_LINE
+// characters to the terminal.
+void print_horizontal_line(int length);
+
 
 // ======================= Task List Array Functions ======================= //
 // Initializes an array of TaskList* pointers and saves it to the global
@@ -42,5 +51,23 @@ int tasklist_array_init();
 
 // Frees the memory associated with the task list array.
 void tasklist_array_free();
+
+// Takes in a TaskList pointer and attempts to add it to the global array.
+// Returns 0 on success and a non-zero value on failure.
+int tasklist_array_add(TaskList* list);
+
+// Takes in a TaskList pointer and attempts to remove it from the global array.
+// List members that occur after the removed entry are shifted down.
+// Returns 0 on success and a non-zero value on error.
+int tasklist_array_remove(TaskList* list);
+
+
+// ======================== Other Helper Functions ========================= //
+// Sorts an array of strings using 'sort_string_array_cmp' as the comparison
+// function.
+void sort_string_array(const char* strings[], int length);
+
+// The comparison function for sorting an array of strings
+int sort_string_array_cmp(const void* a, const void* b);
 
 #endif

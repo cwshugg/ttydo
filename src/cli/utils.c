@@ -10,7 +10,6 @@
 #include "utils.h"
 #include "command.h"
 #include "../visual/terminal.h"
-#include "../tasklist.h"
 #include "../scribe.h"
 
 // ======================= Globals/Macros/Prototypes ======================= //
@@ -76,7 +75,10 @@ void print_intro()
 
     // otherwise, we'll print out the lists currently stored
     int print_amount = tasklist_array_length;
-    printf("You have %d task lists.\n", tasklist_array_length);
+    if (tasklist_array_length == 1)
+    { printf("You have 1 task list.\n"); }
+    else
+    { printf("You have %d task lists.\n", tasklist_array_length); }
 
     // iterate and print each in box form
     for (int i = 0; i < print_amount; i++)
@@ -149,14 +151,25 @@ void print_box_terminal_safe(char* title, char* text)
     printf("\n");
 }
 
+void print_horizontal_line(int length)
+{
+    for (int i = 0; i < length; i++)
+    { printf(H_LINE); }
+    printf("\n");
+}
+
+
 // ======================= Task List Array Functions ======================= //
 int tasklist_array_init()
 {
     // first, count the number of task lists stored on disk in the ttydo
     // directory. If there are more than our initial capacity, we'll want to
     // allocate a larger array.
-    char** list_paths = NULL;
-    int list_count = count_saved_task_lists(&list_paths);
+    char** list_names = NULL;
+    int list_count = count_saved_task_lists(&list_names);
+
+    // sort the array of list names
+    sort_string_array((const char**) list_names, list_count);
 
     // calculate the nearest power of two relative to the list count
     int list_cap = 0;
@@ -184,18 +197,18 @@ int tasklist_array_init()
     for (int i = 0; i < list_count; i++)
     {
         // load the file, increase the array length, and free the path string
-        tasklists[i] = load_task_list(list_paths[i]);
+        tasklists[i] = load_task_list(list_names[i]);
         tasklist_array_length++;
-        free(list_paths[i]);
+        free(list_names[i]);
     }
-    free(list_paths);
+    free(list_names);
 
     return 0;
 }
 
 void tasklist_array_free()
 {
-    if (!tasklists) { return; }
+    if (!tasklists) { fatality(1, "Task list array not initialized."); }
 
     if (tasklist_array_length > 0)
     {
@@ -208,3 +221,50 @@ void tasklist_array_free()
     free(tasklists);
     tasklists = NULL;
 }
+
+int tasklist_array_add(TaskList* list)
+{
+    // check our global list, and for null input
+    if (!tasklists) { fatality(1, "Task list array not initialized."); }
+    if (!list) { return 1; }
+
+    // make sure we have enough room in the array. We'll double the capacity
+    // if necessary
+    if (tasklist_array_length == tasklist_array_capacity)
+    {
+        tasklist_array_capacity <<= 1; // multiply by 2
+        tasklists = realloc(tasklists, tasklist_array_capacity * sizeof(TaskList*));
+        if (!tasklists)
+        { fatality(1, "Task list array couldn't be expanded."); }
+    }
+
+    // add the task list to the next available index, save it to a file, and
+    // return 0. (Exit on failed save attempt)
+    tasklists[tasklist_array_length++] = list;
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to task list to disk."); }
+    return 0;
+}
+
+int tasklist_array_remove(TaskList* list)
+{
+    // check our global list, and for null input
+    if (!tasklists) { fatality(1, "Task list array not initialized."); }
+    if (!list) { return 1; }
+
+    return 0;
+}
+
+
+// ======================== Other Helper Functions ========================= //
+void sort_string_array(const char** strings, int length)
+{
+    // check for null entry
+    if (!strings) { return; }
+
+    // call qsort
+    qsort(strings, length, sizeof(const char*), sort_string_array_cmp);
+}
+
+int sort_string_array_cmp(const void* a, const void* b)
+{ return strcmp(*(const char**) a, *(const char**) b); }

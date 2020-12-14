@@ -97,14 +97,31 @@ int handle_list(int argc, char** args)
     // if we weren't given any arguments, print and return
     if (argc == 0)
     {
+        // if we have no lists, print a message
         if (tasklist_array_length == 0)
         {
             printf("Looks like you don't have any task lists.\n");
             printf("Try 'ttydo list new' to make one.\n");
             return 0;
         }
-        printf("");
+
+        // make a "you have X lists" message
+        char count_message[128] = {'\0'};
+        sprintf(count_message, "You have %d task list", tasklist_array_length);
+        if (tasklist_array_length > 1) { strcat(count_message, "s"); }
+        strcat(count_message, ".");
+
+        // print the message, and a divider line
+        printf("%s\n", count_message);
+        print_horizontal_line(strlen(count_message));
+
+        // iterate through all lists
+        for (int i = 0; i < tasklist_array_length; i++)
+        {
+            char number[8];
+            sprintf(number, "%d.", i);
+            printf("%-3s %s\n", number, tasklists[i]->name);
+        }
     }
-    printf("Argument count: %d\n", argc);
     return 0;
 }
