@@ -35,8 +35,9 @@ int main(int argc, char** argv)
         finish();
     }
 
-    // initialize the command array
+    // initialize the command array and our global task list
     init_commands();
+    tasklist_array_init();
 
     // take the command-line arguments (minus the first one) and match them up
     // to a command. Save the return value

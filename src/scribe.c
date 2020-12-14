@@ -3,9 +3,12 @@
 //      Connor Shugg
 
 // Module inclusions
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <dirent.h>
 #include "scribe.h"
 
 // =============== Constants and Helper Function Prototypes ================ //
@@ -18,6 +21,7 @@ char TTYDO_HOME_DIR[TTYDO_HOME_DIR_LENGTH] = {'\0'}; // holds the home path
 char* get_home_directory();
 char* make_task_list_file_path(char* name);
 char* format_string_for_file_name(char* string, int string_length);
+int file_is_tasklist(char* path);
 
 
 // ======================== Header Implementations ========================= //
@@ -120,6 +124,64 @@ TaskList* load_task_list(char* name)
     free(buffer);
 
     return list;
+}
+
+int count_saved_task_lists(char*** list_names)
+{
+    // get the ttydo home directory
+    char* home = get_home_directory();
+    if (!home)
+    { return 1; }
+
+    // attempt to open the home directory for reading
+    DIR* dir = opendir(home);
+    if (!dir)
+    {
+        free(home);
+        return 1;
+    }
+
+    // allocate an array of strings and iterate through the array again to
+    // copy each file name. We'll start with a set array capacity and realloc
+    // if more space is needed.
+    int names_capacity = 8;
+    char** names = calloc(names_capacity, sizeof(char*));
+    int tasklist_count = 0;
+    struct dirent* de;
+    while ((de = readdir(dir)) != NULL)
+    {
+        // we only care about the files that end in the correct prefix
+        if (file_is_tasklist(de->d_name))
+        {
+            // if we're going to run out of space in our array, reallocate
+            if (tasklist_count == names_capacity)
+            {
+                names_capacity <<= 1; // multiply by 2
+                names = realloc(names, names_capacity * sizeof(char*));
+            }
+
+            // find the location of the '.tasklist' suffix (we know it has
+            // one at this point, thanks to 'file_is_tasklist')
+            char* suffix = strstr(de->d_name, TTYDO_LIST_SUFFIX);
+            int length = strlen(de->d_name) - strlen(suffix);
+
+            // allocate a new string
+            names[tasklist_count] = calloc(length + 1, sizeof(char));
+            // copy the file name for the tasklist
+            strncat(names[tasklist_count], de->d_name, length);
+
+            // increment the counter
+            tasklist_count++;
+        }
+    }
+
+    // close the directory
+    closedir(dir);
+
+    // set the given char*** to point at the created array, and return the
+    // number of task lists that were counted
+    *list_names = names;
+    return tasklist_count;
 }
 
 
@@ -226,4 +288,23 @@ char* format_string_for_file_name(char* string, int string_length)
 
     // return the resulting string
     return result;
+}
+
+// Takes in a path to a file and determines if it ends in the correct suffix
+// to be identified as a saved task list. Returns 1 if true, and 0 if false
+// (or if the given pointer was NULL or empty)
+int file_is_tasklist(char* path)
+{
+    if (!path) { return 0; }
+
+    // compute the length of the path and the suffix
+    int length = strlen(path);
+    int suffix_length = strlen(TTYDO_LIST_SUFFIX);
+    if (length < suffix_length) { return 0; }
+
+    // search for the suffix in the path. If it's at the very end of the
+    // string, we'll return true
+    char* suffix_location = strstr(path, TTYDO_LIST_SUFFIX);
+    return suffix_location &&
+           suffix_location - path == length - suffix_length;
 }

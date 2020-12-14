@@ -93,6 +93,12 @@ int handle_list(int argc, char** args)
     // if we weren't given any arguments, print and return
     if (argc == 0)
     {
+        if (TASKLIST_ARRAY_LENGTH == 0)
+        {
+            printf("Looks like you don't have any task lists.\n");
+            printf("Try 'ttydo list new' to make one.\n");
+            return 0;
+        }
         printf("");
     }
     printf("Argument count: %d\n", argc);

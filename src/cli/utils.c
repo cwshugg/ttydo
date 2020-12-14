@@ -6,10 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "utils.h"
 #include "command.h"
 #include "../visual/terminal.h"
 #include "../tasklist.h"
+#include "../scribe.h"
 
 // ======================= Globals/Macros/Prototypes ======================= //
 // Command globals
@@ -55,6 +57,8 @@ void clean_up()
         { command_free(commands[i]); }
         free(commands);
     }
+    // free the tasklist array
+    tasklist_array_free();
 }
 
 
@@ -128,10 +132,56 @@ void print_box_terminal_safe(char* title, char* text)
 // ======================= Task List Array Functions ======================= //
 int tasklist_array_init()
 {
+    // first, count the number of task lists stored on disk in the ttydo
+    // directory. If there are more than our initial capacity, we'll want to
+    // allocate a larger array.
+    char** list_paths = NULL;
+    int list_count = count_saved_task_lists(&list_paths);
+
+    // calculate the nearest power of two relative to the list count
+    int list_cap = 0;
+    int i = 31;
+    while (i >= 0 && !list_cap)
+    {
+        // shift the ith bit - if it's 1, we found the MSB that's = 1.
+        // That's our log_base2 of list_count
+        if (list_count >> i)
+        { list_cap = i + 1; }
+        i--;
+    }
+    // use the log_base2 of the list count to calculate a power-of-two capacity
+    // for our list array (with a minimum value of 8)
+    if (list_cap > 3) { list_cap = 1 << list_cap; }
+    else { list_cap = 8; }
+    TASKLIST_ARRAY_CAPACITY = list_cap;
+
     // use the capacity to create an appropriately-size array
     tasklists = calloc(TASKLIST_ARRAY_CAPACITY, sizeof(TaskList*));
     if (!tasklists)
     { return 1; }
+
+    for (int i = 0; i < list_count; i++)
+    { printf("Task list: %s\n", list_paths[i]); }
+
+    // iterate through the task list files and load them into memory
+    for (int i = 0; i < list_count; i++)
+    {
+        // load the file, increase the array length, and free the path string
+        tasklists[i] = load_task_list(list_paths[i]);
+        TASKLIST_ARRAY_LENGTH++;
+        free(list_paths[i]);
+
+        BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
+        if (bs)
+        {
+            printf("Loaded task list:\n");
+            box_stack_print(bs);
+            box_stack_free(bs);
+        }
+    }
+    free(list_paths);
+
+    printf("Task list array length: %d\n", TASKLIST_ARRAY_LENGTH);
 
     return 0;
 }
@@ -139,7 +189,8 @@ int tasklist_array_init()
 void tasklist_array_free()
 {
     // iterate up to TASKLIST_ARRAY_LENGTH times and free each tasklist
-    // TODO
+    for (int i = 0; i < TASKLIST_ARRAY_LENGTH; i++)
+    { task_list_free(tasklists[i]); }
 
     // free the tasklist pointer itself and set it back to NULL
     free(tasklists);

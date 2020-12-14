@@ -69,7 +69,7 @@ char* command_to_string(Command* comm)
 
     // print the command short/long hand into one string
     char left_side[128];
-    sprintf(left_side, "%s/%s", comm->longhand, comm->shorthand);
+    sprintf(left_side, "%s (%s)", comm->longhand, comm->shorthand);
 
     int cap = 256;
     char* result = calloc(cap + 1, sizeof(char));
