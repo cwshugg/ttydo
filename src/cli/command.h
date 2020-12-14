@@ -1,5 +1,7 @@
 // This header file defines the struct(s) and functions that represent a single
 // ttydo command, such as "add", or "remove".
+// Each command has a handler function that takes in a char** of command-line
+// arguments and returns an integer - 0 on success, and non-zero on failure.
 //
 //      Connor Shugg
 
