@@ -9,7 +9,8 @@
 #include "command.h"
 
 // ======================== Header Implementations ========================= //
-Command* command_new(char* n, char* s, char* l, char* d, int (*h)(int argc, char** args))
+Command* command_new(char* n, char* s, char* l, char* d,
+                     int (*h)(Command* comm, int argc, char** args))
 {
     // check for null pointers
     if (!n || !d || !s || !l || !h)
@@ -25,6 +26,8 @@ Command* command_new(char* n, char* s, char* l, char* d, int (*h)(int argc, char
     comm->shorthand = strdup(s);
     comm->longhand = strdup(l);
     comm->handler = h;
+    comm->subcommands = NULL;
+    comm->subcommands_length = 0;
 
     // check for failed string duplications
     if (!comm->name || !comm->description || !comm->shorthand || !comm->longhand)
@@ -48,8 +51,35 @@ void command_free(Command* comm)
     if (comm->shorthand) { free(comm->shorthand); }
     if (comm->longhand) { free(comm->longhand); }
 
+    // free the subcommand array
+    if (comm->subcommands)
+    {
+        for (int i = 0; i < comm->subcommands_length; i++)
+        { command_free(comm->subcommands[i]); }
+        free(comm->subcommands);
+    }
+
     // free the main pointer
     free(comm);
+}
+
+int command_init_subcommands(Command* comm, int num_sub_commands)
+{
+    if (!comm) { return 1; }
+
+    // set length, allocate, and return if the allocation worked
+    comm->subcommands_length = num_sub_commands;
+    comm->subcommands = calloc(comm->subcommands_length, sizeof(Command*));
+    return 0;
+}
+
+int command_match(Command* comm, char* string)
+{
+    // make sure the given pointers aren't null, and match both the shorthand
+    // and longhand strings
+    return (comm && string) &&
+           (!strcmp(comm->shorthand, string) ||
+            !strcmp(comm->longhand, string));
 }
 
 void command_print(Command* comm)

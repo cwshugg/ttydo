@@ -12,20 +12,34 @@
 // ============================ Command Struct ============================= //
 typedef struct _Command
 {
-    char* name;                  // name of the command (such as "Add")
-    char* description;           // description of the command
-    char* shorthand;             // shorthand command identifier (such as "a")
-    char* longhand;              // longhand command identifier (such as "add")
-    int (*handler)(int argc, char** args); // handler function for the command
+    char* name;                 // name of the command (such as "Add")
+    char* description;          // description of the command
+    char* shorthand;            // shorthand command identifier (such as "a")
+    char* longhand;             // longhand command identifier (such as "add")
+    // handler function for the command
+    int (*handler)(struct _Command* comm, int argc, char** args);
+    struct _Command** subcommands; // Array of sub-commands
+    int subcommands_length;     // Number of sub-commands
 } Command;
 
 // Takes in parameters to fill in all the fields of a new command struct and
 // attempts to create a new dynamically-allocated command. Returns the command
 // on success and NULL on failure.
-Command* command_new(char* n, char* s, char* l, char* d, int (*h)(int argc, char** args));
+Command* command_new(char* n, char* s, char* l, char* d,
+                     int (*h)(Command* comm, int argc, char** args));
 
 // Takes in a command pointer and attempts to free all of its memory.
 void command_free(Command* comm);
+
+// Takes in a command pointer and a number of subcommands, and attempts to
+// allocate memory to store the given number of subcommand Command structs.
+// Returns 0 on success and a non-zero value on error.
+int command_init_subcommands(Command* comm, int num_sub_commands);
+
+// Takes in a user-inputted string representing a shorthand or longhand
+// command identifier, and tries to match the given command with it. Returns
+// 1 if it matches, and 0 if it doesn't match.
+int command_match(Command* comm, char* string);
 
 // Takes in a command pointer and attempts to print out a formatted help
 // message on how the command is used.

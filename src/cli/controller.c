@@ -8,7 +8,7 @@
 #include <string.h>
 #include "utils.h"
 #include "command.h"
-#include "handlers.h"
+#include "handlers/handlers.h"
 #include "../tasklist.h"
 
 // ======================= Globals/Macros/Prototypes ======================= //
@@ -59,15 +59,15 @@ void init_commands()
     // allocate the main command array
     commands = calloc(NUM_COMMANDS, sizeof(Command*));
 
+    char* fatality_message = "Couldn't initialize commands.";
+
     // help command
-    commands[0] = command_new("Help", "h", "help",
-        "Shows a help menu on how to use ttydo.",
-        handle_help);
+    commands[0] = init_command_help();
+    if (!commands[0]) { fatality(1, fatality_message); }
     
     // list command
-    commands[1] = command_new("List", "l", "list",
-        "Provides various actions to create, view, and modify task lists.",
-        handle_list);
+    commands[1] = init_command_list();
+    if (!commands[1]) { fatality(1, fatality_message); }
 }
 
 // Searches the command list for a command with the name given by the
@@ -87,16 +87,14 @@ int execute_command(int argc, char** args)
     int i = 0;
     while (i < NUM_COMMANDS && !comm)
     {
-        // if the shorthand OR longhand string matches, we found a command
-        if (!strcmp(commands[i]->shorthand, command) ||
-            !strcmp(commands[i]->longhand, command))
+        if (command_match(commands[i], command))
         { comm = commands[i]; }
         i++;
     }
 
     // pass the remaining command-line arguments onto the command handler
     if (comm)
-    { return comm->handler(argc - 1, args + 1); }    
+    { return comm->handler(comm, argc - 1, args + 1); }    
 
     // if no command could be found, return -1
     return -1;
