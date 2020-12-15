@@ -13,7 +13,7 @@
 
 // ======================= Globals/Macros/Prototypes ======================= //
 // Command globals
-int NUM_COMMANDS = 2;       // number of commands in the array
+int NUM_COMMANDS = 3;       // number of commands in the array
 Command** commands = NULL;  // global array of commands
 // Task list globals
 int tasklist_array_capacity = 8; // initial cap of our global tasklist array
@@ -68,6 +68,10 @@ void init_commands()
     // list command
     commands[1] = init_command_list();
     if (!commands[1]) { fatality(1, fatality_message); }
+
+    // task command
+    commands[2] = init_command_task();
+    if (!commands[2]) { fatality(1, fatality_message); }
 }
 
 // Searches the command list for a command with the name given by the

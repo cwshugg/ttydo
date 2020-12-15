@@ -41,6 +41,6 @@ int handle_help(Command* comm, int argc, char** args)
     { return 1; }
 
     // print extra message(s)
-    printf("Invoke any of these commands with \"help\" (\"h\") to learn how to use them.\n");
+    printf("Invoke any of these commands with 'help' ('h') to learn how to use them.\n");
     return 0;
 }

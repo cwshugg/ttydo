@@ -35,4 +35,9 @@ extern int handle_list(Command* comm, int argc, char** args);
 // The 'list' command initializer
 extern Command* init_command_list();
 
+// The 'task' command handler
+extern int handle_task(Command* comm, int argc, char** args);
+// The 'task' command initializer
+extern Command* init_command_task();
+
 #endif
