@@ -8,7 +8,6 @@
 #include <string.h>
 #include <math.h>
 #include "utils.h"
-#include "command.h"
 #include "../visual/terminal.h"
 #include "../scribe.h"
 
@@ -144,19 +143,6 @@ void print_logo(char* prefix)
     //                ---------- Y -----------
     printf("%s        \u2580\u2580\u2580\u2580", prefix);
     printf("\n");
-
-    // //         T1 stem    T2 stem   ---- Y middle ----
-    // printf("%s  \u2588     \u2588    \u2580\u2584\u2580", prefix);
-    // //        D side   D side O side   O side
-    // printf("  \u2588   \u2588 \u2588   \u2588\n");
-
-    // // ========================== Row 3 ========================== //
-    // //         T1 stem    T2 stem    Y stem
-    // printf("%s  \u2588     \u2588     \u2588", prefix);
-    // //         ---------- D bottom ----------
-    // printf("   \u2588\u2584\u2584\u2584\u2580");
-    // //       ---------- O bottom ----------
-    // printf(" \u2580\u2584\u2584\u2584\u2580\n");
 }
 
 void print_box_terminal_safe(char* title, char* text)
@@ -192,6 +178,73 @@ void print_horizontal_line(int length)
     for (int i = 0; i < length; i++)
     { printf(H_LINE); }
     printf("\n");
+}
+
+int print_subcommands(Command* comm, char* title)
+{
+    // if we were given a null title, return
+    if (!title) { return 1; }
+
+    // by default, use global list
+    Command** arr = commands;
+    int arr_length = NUM_COMMANDS;
+    // if we were given a non-null command, use its sub-commands instead
+    if (comm)
+    {
+        arr = comm->subcommands;
+        arr_length = comm->subcommands_length;
+    }
+
+    // we'll make a generous guess that each command string will be under 256
+    // characters. Since each will also have a '\n'.... we'll just round up to
+    // 300 to be safe.
+    char* box_string = calloc(300 * arr_length, sizeof(char));
+    if (!box_string) { return 1; }
+
+    // iterate through each command build a giant string to go in a box
+    int longest_length = 0;
+    for (int i = 0; i < arr_length; i++)
+    {
+        // make the string, append it to the master string, then free it
+        char* comm_string = command_to_string(arr[i]);
+        strcat(box_string, comm_string);
+
+        // append a newline, if necessary
+        if (i < arr_length - 1)
+        { strcat(box_string, "\n"); }
+
+        // update the maximum line length
+        int length = strlen(comm_string) + 1;
+        if (length > longest_length)
+        { longest_length = length; }
+
+        // free the command string
+        free(comm_string);
+    }
+    
+    // check the terminal width - if it's not long enough to print a box,
+    // we'll instead print out the commands without a box (so the text will
+    // wrap around)
+    int terminal_width = get_terminal_width();
+    if (longest_length + 4 > terminal_width)
+    {
+        print_box_terminal_safe(title, box_string);
+        // free the box string and return
+        free(box_string);
+        return 0;
+    }
+    
+    // create a box and free the master string (since the box will copy it)
+    Box* box = box_new(0, 0, title, box_string);
+    free(box_string);
+    if (!box)
+    { return 1; }
+
+    // adjust the box to fit the text, print, and free it
+    box_adjust_to_text(box, 1);
+    box_print(box);
+    box_free(box);
+    return 0;
 }
 
 

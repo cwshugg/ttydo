@@ -83,13 +83,20 @@ int handle_list(Command* comm, int argc, char** args)
         return 0;
     }
 
+    // match the help command (takes in a different command argument)
+    Command* help_comm = comm->subcommands[0];
+    if (command_match(help_comm, args[0]))
+    { return help_comm->handler(comm, argc - 1, args + 1); }
+
     // try to match sub-commands
-    for (int i = 0; i < comm->subcommands_length; i++)
+    for (int i = 1; i < comm->subcommands_length; i++)
     {
         Command* sub = comm->subcommands[i];
         if (command_match(sub, args[0]))
-        { sub->handler(sub, argc - 1, args + 1); }
+        { return sub->handler(sub, argc - 1, args + 1); }
     }
+
+    printf("Sub-Command not found. (Try 'ttydo list help')\n");
 
     return 0;
 }
@@ -97,17 +104,8 @@ int handle_list(Command* comm, int argc, char** args)
 // Handles the 'help' sub command
 int handle_list_help(Command* comm, int argc, char** args)
 {
-    int num_commands = 2;
-    int content_length = 300 * num_commands;
-
-    // make a title and box description
-    //char* title = "Supported Sub-Commands ('list')";
-    char content[content_length];
-    memset(content, 0, content_length);
-
-    
-
-    return 0;
+    // print out the sub-command array
+    return print_subcommands(comm, "Supported Sub-Commands ('list')");
 }
 
 // Handles the 'new' sub command.

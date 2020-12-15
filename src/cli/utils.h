@@ -6,6 +6,7 @@
 #define UTILS_H
 
 // Module inclusions
+#include "command.h"
 #include "../visual/box.h"
 #include "../tasklist.h"
 
@@ -42,6 +43,10 @@ void print_box_terminal_safe(char* title, char* text);
 // Takes in a certain length and prints out 'length' number of H_LINE
 // characters to the terminal.
 void print_horizontal_line(int length);
+
+// Takes in a command and attempts to print out its subcommands in a box.
+// If the given parameter is NULL, the global list of commands is used instead.
+int print_subcommands(Command* comm, char* title);
 
 
 // ======================= Task List Array Functions ======================= //
