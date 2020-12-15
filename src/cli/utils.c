@@ -107,7 +107,14 @@ void print_intro()
     // print a message about only SOME being full
     if (tasklist_array_length > filled_amount)
     {
-        if (filled_amount == 1)
+        if (filled_amount == 0)
+        {
+            if (tasklist_array_length > 1)
+            { printf("None of them have tasks in them.\n"); }
+            else
+            { printf("It doesn't have any tasks in it.\n"); }
+        }
+        else if (filled_amount == 1)
         { printf("Only 1 has tasks in it.\n"); }
         else
         { printf("Only %d have tasks in them.\n", filled_amount); }
@@ -390,6 +397,36 @@ int tasklist_array_remove(int index)
     return 0;
 }
 
+int tasklist_array_find(char* input)
+{
+    // check for null input
+    if (!input) { return -1; }
+
+    // take in the first argument and attempt to convert it to an integer
+    char* end;
+    long index = strtol(input, &end, 10);
+
+    // if the index is zero, we'll assume parsing failed, and we'll try
+    // to find the index by interpreting the argument as a task list name
+    int temp = 0;
+    while (temp < tasklist_array_length && index == 0)
+    {
+        // compare at most TASK_LIST_NAME_MAX_LENGTH characters. If the
+        // current list matches the name, 
+        if (!strncmp(tasklists[temp]->name, input,
+            TASK_LIST_NAME_MAX_LENGTH))
+        { index = temp + 1; }
+        // increment temporary index
+        temp++;
+    }
+
+    // if we didn't find an index, print and continue
+    if (index == 0 || index > tasklist_array_length)
+    { return -1; }
+    
+    // return the array index
+    return index - 1;
+}
 
 // ======================== Other Helper Functions ========================= //
 void sort_string_array(const char** strings, int length)

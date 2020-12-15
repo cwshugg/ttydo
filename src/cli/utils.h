@@ -69,6 +69,13 @@ int tasklist_array_add(TaskList* list);
 // Returns 0 on success and a non-zero value on error.
 int tasklist_array_remove(int index);
 
+// Takes in a string input from the command-line and attempts to interpret it
+// as either a number or the name of a task list. In either case, the index
+// of the matching list is returned, or -1 if it can't be found.
+// Since this comes from user input, if a number is parsed, it gets decreased
+// by one to make an array index (1 --> 0, 2, --> 1, etc.)
+int tasklist_array_find(char* input);
+
 
 // ======================== Other Helper Functions ========================= //
 // Sorts an array of strings using 'sort_string_array_cmp' as the comparison

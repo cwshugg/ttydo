@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include "handlers.h"
 #include "../utils.h"
 
@@ -15,6 +14,7 @@
 int handle_list_help(Command* comm, int argc, char** args);
 int handle_list_new(Command* comm, int argc, char** args);
 int handle_list_delete(Command* comm, int argc, char** args);
+int find_task_list(char* input);
 
 
 // ============================== Initializer ============================== //
@@ -63,7 +63,7 @@ int handle_list(Command* comm, int argc, char** args)
         // if we have no lists, print a message
         if (tasklist_array_length == 0)
         {
-            printf("Looks like you don't have any task lists.\n");
+            printf("You don't have any task lists.\n");
             printf("Try 'ttydo list new' to make one.\n");
             return 0;
         }
@@ -101,7 +101,25 @@ int handle_list(Command* comm, int argc, char** args)
         { return sub->handler(sub, argc - 1, args + 1); }
     }
 
-    printf("Sub-Command not found. (Try 'ttydo list help')\n");
+    // if we couldn't find a sub-command, try to match it as a name or
+    // number of a list. If it matches one, we'll print it out
+    int index = tasklist_array_find(args[0]);
+    if (index >= 0)
+    {
+        // if the task list has tasks, print it as a box stack
+        if (tasklists[index]->size > 0)
+        {
+            BoxStack* bs = task_list_to_box_stack(tasklists[index], 1);
+            if (!bs) { eprintf("Couldn't print task list."); }
+            // print the box stack
+            box_stack_print(bs);
+            box_stack_free(bs);
+        }
+        else
+        { printf("The list '%s' has no tasks.\n", tasklists[index]->name); }
+    }
+    else
+    { eprintf("Sub-Command not found. (Try 'ttydo list help')\n"); }
 
     return 0;
 }
@@ -110,7 +128,12 @@ int handle_list(Command* comm, int argc, char** args)
 int handle_list_help(Command* comm, int argc, char** args)
 {
     // print out the sub-command array
-    return print_subcommands(comm, "Supported Sub-Commands ('list')");
+    int result = print_subcommands(comm, "Supported Sub-Commands ('list')");
+
+    // print out other message(s)
+    printf("Run without arguments to view your lists.\n");
+    printf("Run with a list name or number to view a list.\n");
+    return result;
 }
 
 // Handles the 'new' sub command.
@@ -153,35 +176,14 @@ int handle_list_delete(Command* comm, int argc, char** args)
         return 0;
     }
 
-    // take in the first argument and attempt to convert it to an integer
-    char* end;
-    errno = 0;
-    long index = strtol(args[0], &end, 10);
-
-    // if the index is zero, we'll assume parsing failed, and we'll try
-    // to find the index by interpreting the argument as a task list name
-    int temp = 0;
-    while (temp < tasklist_array_length && index == 0)
-    {
-        // compare at most TASK_LIST_NAME_MAX_LENGTH characters. If the
-        // current list matches the name, 
-        if (!strncmp(tasklists[temp]->name, args[0],
-            TASK_LIST_NAME_MAX_LENGTH))
-        { index = temp + 1; }
-        // increment temporary index
-        temp++;
-    }
-
-    // if we didn't find an index, print and continue
-    if (index == 0 || index > tasklist_array_length)
+    // take the argument and try to find an index of a task list
+    int index = tasklist_array_find(args[0]);
+    if (index < 0)
     {
         eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
-        // print an additional message for incorrect numbers
-        if (index != 0)
-        { printf("Numbers must be between 1 and %d.\n", tasklist_array_length); }
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
         return 0;
     }
-    index--; // knock index back down to be an array index
 
     // save the task list's name for the success message
     char lname[TASK_LIST_NAME_MAX_LENGTH] = {'\0'};
