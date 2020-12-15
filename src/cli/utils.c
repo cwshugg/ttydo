@@ -26,11 +26,13 @@ void clean_up();
 // ========================= Error/Exit Functions ========================== //
 void fatality(int exit_code, char* message)
 {
+    fprintf(stderr, "Fatal ");
+
     // if we didn't get a message, print a default one
     if (!message)
-    { fprintf(stderr, "FATAL: (no message provided)\n"); }
+    { eprintf("(no message provided)\n"); }
     else
-    { fprintf(stderr, "FATAL: %s\n", message); }
+    { eprintf("%s\n", message); }
 
     // clean up and exit
     clean_up();
@@ -42,6 +44,24 @@ void finish()
     // clean up memory and exit
     clean_up();
     exit(0);
+}
+
+void eprintf(const char* format, ...)
+{
+    fprintf(stderr, "Error: ");
+
+    // if the format is null, print a default message and return
+    if (!format)
+    {
+        fprintf(stderr, "(no message given)");
+        return;
+    }
+
+    // print the variable arguments
+    va_list arg;
+    va_start(arg, format);
+    vfprintf(stderr, format, arg);
+    va_end(arg);
 }
 
 // Cleans all the memory allocated by the CLI. Used both when exiting normally
@@ -101,7 +121,7 @@ void print_intro()
         {
             BoxStack* bs = task_list_to_box_stack(tasklists[i], 1);
             if (!bs)
-            { fprintf(stderr, "Error: couldn't print task list: %s.\n", tasklists[i]->name); }
+            { eprintf("Couldn't print task list: %s.\n", tasklists[i]->name); }
 
             box_stack_print(bs);
             box_stack_free(bs);
@@ -335,11 +355,35 @@ int tasklist_array_add(TaskList* list)
     return 0;
 }
 
-int tasklist_array_remove(TaskList* list)
+int tasklist_array_remove(int index)
 {
-    // check our global list, and for null input
+    // check our global list or invalid input
     if (!tasklists) { fatality(1, "Task list array not initialized."); }
-    if (!list) { return 1; }
+    if (index < 0 || index >= tasklist_array_length)
+    { return 1; }
+
+    // delete the task list's file on disk
+    int del_result = delete_task_list(tasklists[index]);
+    if (del_result)
+    {
+        eprintf("Failed to delete task list from disk.\n");
+        return 1;
+    }
+    
+    // free and null-out the pointer
+    task_list_free(tasklists[index]);
+    tasklists[index] = NULL;
+
+    // if the are task lists that occurr after the one we just removed, we
+    // need to shift them down
+    if (index < tasklist_array_length - 1)
+    {
+        for (int i = index; i < tasklist_array_length; i++)
+        { tasklists[i] = tasklists[i + 1]; }
+    }
+
+    // decrease the array size
+    tasklist_array_length--;
 
     return 0;
 }

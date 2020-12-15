@@ -37,5 +37,10 @@ int handle_help(Command* comm, int argc, char** args)
     printf("A command-line task tracker.\n");
 
     // print the global command list
-    return print_subcommands(NULL, "Supported Commands");
+    if (print_subcommands(NULL, "Supported Commands"))
+    { return 1; }
+
+    // print extra message(s)
+    printf("Invoke any of these commands with \"help\" (\"h\") to learn how to use them.\n");
+    return 0;
 }

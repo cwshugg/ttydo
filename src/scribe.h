@@ -18,6 +18,10 @@ int save_task_list(TaskList* list);
 // NULL is returned
 TaskList* load_task_list(char* name);
 
+// Takes in a TaskList pointer and attempts to delete its file on disk.
+// Returns 0 on success and a non-zero value on failure.
+int delete_task_list(TaskList* list);
+
 // Attempts to count the number of saved task lists in the ttydo directory.
 // The number counted is returned, and the names of the lists are saved in a
 // dynamically-allocated char** pointer (whose address is provided by the

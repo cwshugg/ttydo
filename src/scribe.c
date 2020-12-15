@@ -126,6 +126,25 @@ TaskList* load_task_list(char* name)
     return list;
 }
 
+int delete_task_list(TaskList* list)
+{
+    if (!list) { return 1; }
+
+    // using the name, generate the file path for the task list
+    char* file_path = make_task_list_file_path(list->name);
+    if (!file_path) { return 1; }
+
+    // attempt to delete the file. Return the error code on failure
+    errno = 0;
+    int result = remove(file_path);
+    if (result < 0 || errno)
+    { return errno; }
+
+    // free the file path and return 0
+    free(file_path);
+    return 0;
+}
+
 int count_saved_task_lists(char*** list_names)
 {
     // get the ttydo home directory

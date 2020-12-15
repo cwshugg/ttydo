@@ -24,6 +24,9 @@ void fatality(int exit_code, char* message);
 // Standard, run-of-the-mill "exit and clean up" function.
 void finish();
 
+// A printf-like function that prints to STDERR. Used to print error messages.
+void eprintf(const char* format, ...);
+
 
 // ========================== Printing Functions =========================== //
 // Prints an 'intro' page that's displayed when the user executes ttydo without
@@ -64,7 +67,7 @@ int tasklist_array_add(TaskList* list);
 // Takes in a TaskList pointer and attempts to remove it from the global array.
 // List members that occur after the removed entry are shifted down.
 // Returns 0 on success and a non-zero value on error.
-int tasklist_array_remove(TaskList* list);
+int tasklist_array_remove(int index);
 
 
 // ======================== Other Helper Functions ========================= //

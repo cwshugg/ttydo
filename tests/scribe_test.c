@@ -59,7 +59,7 @@ void test_scribe_string_to_task()
 int main()
 {
     // create a new task list
-    TaskList* l1 = task_list_new("list 1");
+    TaskList* l1 = task_list_new("TEST LIST");
     int task_count = 5;
     Task* task_array[task_count];
     for (int i = 0; i < task_count; i++)
@@ -143,6 +143,9 @@ int main()
         box_stack_free(bs);
     }
 
+    // delete the task list
+    int del_result = delete_task_list(loaded_list);
+    printf("Delete result: %d\n", del_result);
     
     // free the task list(s)
     task_list_free(l1);
