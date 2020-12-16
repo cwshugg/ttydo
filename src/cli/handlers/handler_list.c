@@ -12,7 +12,7 @@
 
 // Function prototypes
 int handle_list_help(Command* comm, int argc, char** args);
-int handle_list_new(Command* comm, int argc, char** args);
+int handle_list_add(Command* comm, int argc, char** args);
 int handle_list_delete(Command* comm, int argc, char** args);
 int find_task_list(char* input);
 
@@ -29,11 +29,11 @@ Command* init_command_list()
     // sub-commands
     if (command_init_subcommands(result, 3)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
-        "Shows a list of support sub-commands.",
+        "Shows a list of supported sub-commands.",
         handle_list_help);
-    result->subcommands[1] = command_new("New", "n", "new",
+    result->subcommands[1] = command_new("Add", "a", "add",
         "Creates a new task list.",
-        handle_list_new);
+        handle_list_add);
     result->subcommands[2] = command_new("Delete", "d", "delete",
         "Deletes an existing task list.",
         handle_list_delete);
@@ -81,9 +81,9 @@ int handle_list(Command* comm, int argc, char** args)
         // iterate through all lists
         for (int i = 0; i < tasklist_array_length; i++)
         {
-            char number[8];
-            sprintf(number, "%d.", i + 1);
-            printf("%-3s %s\n", number, tasklists[i]->name);
+            char text[TASK_LIST_NAME_MAX_LENGTH + 8] = {'\0'};
+            sprintf(text, "%s", tasklists[i]->name);
+            print_list_item(i + 1, text);
         }
         return 0;
     }
@@ -119,7 +119,10 @@ int handle_list(Command* comm, int argc, char** args)
         { printf("The list '%s' has no tasks.\n", tasklists[index]->name); }
     }
     else
-    { eprintf("Sub-Command not found. (Try 'ttydo list help')\n"); }
+    {
+        eprintf("Sub-Command not found. (Try 'ttydo list help')\n");
+        return 1;
+    }
 
     return 0;
 }
@@ -137,11 +140,11 @@ int handle_list_help(Command* comm, int argc, char** args)
 }
 
 // Handles the 'new' sub command.
-int handle_list_new(Command* comm, int argc, char** args)
+int handle_list_add(Command* comm, int argc, char** args)
 {
     if (argc < 1)
     {
-        printf("Usage: 'list new <NAME>'\n");
+        print_usage("list add <NAME>");
         return 0;
     }
 
@@ -156,7 +159,7 @@ int handle_list_new(Command* comm, int argc, char** args)
     if (add_result)
     { fatality(1, "Failed to add new task list to the global array."); }
 
-    printf("Successfully created a new list ('%s').\n", name);
+    //printf("Successfully created a new list ('%s').\n", name);
     return 0;
 }
 
@@ -165,7 +168,8 @@ int handle_list_delete(Command* comm, int argc, char** args)
 {
     if (argc < 1)
     {
-        printf("Usage: 'list delete \"<NAME>\"' / 'list delete <NUMBER>'\n");
+        print_usage("list delete <LIST>");
+        printf("Where <LIST> is either a list's name or number.\n");
         return 0;
     }
 
@@ -197,6 +201,6 @@ int handle_list_delete(Command* comm, int argc, char** args)
     }
 
     // print a success message and return
-    printf("Task list \"%s\" deleted successfully.\n", lname);
+    //printf("Task list \"%s\" deleted successfully.\n", lname);
     return 0;
 }

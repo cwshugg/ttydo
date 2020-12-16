@@ -64,6 +64,24 @@ void eprintf(const char* format, ...)
     va_end(arg);
 }
 
+void wprintf(const char* format, ...)
+{
+    fprintf(stdout, "Warning: ");
+
+    // if the format is null, print a default message and return
+    if (!format)
+    {
+        fprintf(stdout, "(no message given)");
+        return;
+    }
+
+    // print the variable arguments
+    va_list arg;
+    va_start(arg, format);
+    vfprintf(stdout, format, arg);
+    va_end(arg);
+}
+
 // Cleans all the memory allocated by the CLI. Used both when exiting normally
 // and exiting with a fatal error.
 void clean_up()
@@ -110,14 +128,14 @@ void print_intro()
         if (filled_amount == 0)
         {
             if (tasklist_array_length > 1)
-            { printf("None of them have tasks in them.\n"); }
+            { printf("None of them contain any tasks.\n"); }
             else
-            { printf("It doesn't have any tasks in it.\n"); }
+            { printf("It doesn't contain any tasks.\n"); }
         }
         else if (filled_amount == 1)
-        { printf("Only 1 has tasks in it.\n"); }
+        { printf("Only 1 contains tasks.\n"); }
         else
-        { printf("Only %d have tasks in them.\n", filled_amount); }
+        { printf("Only %d contain tasks.\n", filled_amount); }
     }
 
     // iterate and print each in box form
@@ -276,6 +294,19 @@ int print_subcommands(Command* comm, char* title)
     return 0;
 }
 
+void print_list_item(int index, char* string)
+{
+    if (!string) { return; }
+
+    char number[8];
+    sprintf(number, "%d.", index);
+    printf("%-3s %s\n", number, string);
+}
+
+void print_usage(char* usage)
+{
+    printf("Usage: '%s'\n", usage);
+}
 
 // ======================= Task List Array Functions ======================= //
 int tasklist_array_init()
@@ -440,3 +471,21 @@ void sort_string_array(const char** strings, int length)
 
 int sort_string_array_cmp(const void* a, const void* b)
 { return strcmp(*(const char**) a, *(const char**) b); }
+
+void replace_string_non_printables(char* string, int max_length)
+{
+    if (!string) { return; }
+
+    // iterate through each character and make replacements
+    int i = 0;
+    char* current = string;
+    while (i < max_length && current)
+    {
+        if (*current == '\n' || *current == '\t' || *current == '\r' ||
+            *current == '\v' || (int) *current < 32)
+        { *current = ' '; }
+
+        i++;
+        current++;
+    }
+}

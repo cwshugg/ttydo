@@ -27,6 +27,9 @@ void finish();
 // A printf-like function that prints to STDERR. Used to print error messages.
 void eprintf(const char* format, ...);
 
+// A printf-like function that prints warnings.
+void wprintf(const char* format, ...);
+
 
 // ========================== Printing Functions =========================== //
 // Prints an 'intro' page that's displayed when the user executes ttydo without
@@ -50,6 +53,14 @@ void print_horizontal_line(int length);
 // Takes in a command and attempts to print out its subcommands in a box.
 // If the given parameter is NULL, the global list of commands is used instead.
 int print_subcommands(Command* comm, char* title);
+
+// Takes in a string and an index and prints them out in a format similar to
+// that of an ordered list:
+//      "<N>.  <text>"
+void print_list_item(int index, char* string);
+
+// Takes in a string and prints it as a 'usage' statement in a standardized way
+void print_usage(char* usage);
 
 
 // ======================= Task List Array Functions ======================= //
@@ -84,5 +95,9 @@ void sort_string_array(const char* strings[], int length);
 
 // The comparison function for sorting an array of strings
 int sort_string_array_cmp(const void* a, const void* b);
+
+// Takes in a string and attempts to iterate through it to replace all newlines,
+// escape sequences, and other unneeded characters with spaces.
+void replace_string_non_printables(char* string, int max_length);
 
 #endif
