@@ -13,6 +13,8 @@
 // Function prototypes
 int handle_task_help(Command* comm, int argc, char** args);
 int handle_task_add(Command* comm, int argc, char** args);
+int handle_task_delete(Command* comm, int argc, char** args);
+int truncate_string(char* original, char* copy, int max_length);
 
 
 // ============================== Initializer ============================== //
@@ -25,13 +27,16 @@ Command* init_command_task()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 2)) { return NULL; }
+    if (command_init_subcommands(result, 3)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_task_help);
     result->subcommands[1] = command_new("Add", "a", "add",
         "Creates a new task within a task list.",
         handle_task_add);
+    result->subcommands[2] = command_new("Delete", "d", "delete",
+        "Deletes a task from a task list.",
+        handle_task_delete);
 
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
@@ -154,26 +159,12 @@ int handle_task_add(Command* comm, int argc, char** args)
     // new task. Truncate the strings if necessary.
     // ---------- title ---------- //
     char title[TASK_TITLE_MAX_LENGTH + 1] = {'\0'};
-    // determine a length to copy
-    int title_length = strlen(args[1]);
-    if (title_length > TASK_TITLE_MAX_LENGTH)
-    {
-        wprintf("The title is too long. It will be truncated.\n");
-        title_length = TASK_TITLE_MAX_LENGTH;
-    }
-    // copy the string
-    strncpy(title, args[1], title_length);
+    int title_length = truncate_string(args[1], title,
+                                       TASK_TITLE_MAX_LENGTH);
     // ------- description ------- //
     char desc[TASK_DESCRIPTION_MAX_LENGTH + 1] = {'\0'};
-    // determine a length to copy
-    int desc_length = strlen(args[2]);
-    if (desc_length > TASK_DESCRIPTION_MAX_LENGTH)
-    {
-        wprintf("The description is too long. It will be truncated.\n");
-        desc_length = TASK_DESCRIPTION_MAX_LENGTH;
-    }
-    // copy the string
-    strncpy(desc, args[2], desc_length);
+    int desc_length = truncate_string(args[2], desc,
+                                      TASK_DESCRIPTION_MAX_LENGTH);
 
     // replace any newlines with spaces
     replace_string_non_printables(title, title_length);
@@ -192,4 +183,28 @@ int handle_task_add(Command* comm, int argc, char** args)
     { fatality(1, "Failed to write the new task to disk."); }
 
     return 0;
+}
+
+int handle_task_delete(Command* comm, int argc, char** args)
+{
+    printf("TODO: Implement 'delete'\n");
+    return 0;
+}
+
+
+// =========================== Helper Functions ============================ //
+// Takes in a string and a pointer to memory where the string will be copied,
+// AND a maximum length. 'max_length' characters are copied over, or less,
+// depending on the length of the original string.
+// Returns the length that was copied.
+int truncate_string(char* original, char* copy, int max_length)
+{
+    if (!original || !copy) { return 0; }
+
+    int length = strlen(original);
+    if (length > max_length)
+    { length = max_length; }
+    // copy the string
+    strncpy(copy, original, length);
+    return length;
 }
