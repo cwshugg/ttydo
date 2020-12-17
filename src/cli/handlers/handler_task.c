@@ -152,20 +152,32 @@ int handle_task_add(Command* comm, int argc, char** args)
     
     // interpret the two remaining arguments as the name and description of a
     // new task. Truncate the strings if necessary.
+    // ---------- title ---------- //
     char title[TASK_TITLE_MAX_LENGTH + 1] = {'\0'};
-    strncpy(title, args[1], TASK_TITLE_MAX_LENGTH);
+    // determine a length to copy
+    int title_length = strlen(args[1]);
+    if (title_length > TASK_TITLE_MAX_LENGTH)
+    {
+        wprintf("The title is too long. It will be truncated.\n");
+        title_length = TASK_TITLE_MAX_LENGTH;
+    }
+    // copy the string
+    strncpy(title, args[1], title_length);
+    // ------- description ------- //
     char desc[TASK_DESCRIPTION_MAX_LENGTH + 1] = {'\0'};
-    strncpy(desc, args[2], TASK_DESCRIPTION_MAX_LENGTH);
-
-    // warn about truncations, if needed
-    if (strlen(args[1]) > TASK_TITLE_MAX_LENGTH)
-    { wprintf("The title is too long. It will be truncated.\n"); }
-    if (strlen(args[2]) > TASK_DESCRIPTION_MAX_LENGTH)
-    { wprintf("The description is too long. It will be truncated.\n"); }
+    // determine a length to copy
+    int desc_length = strlen(args[2]);
+    if (desc_length > TASK_DESCRIPTION_MAX_LENGTH)
+    {
+        wprintf("The description is too long. It will be truncated.\n");
+        desc_length = TASK_DESCRIPTION_MAX_LENGTH;
+    }
+    // copy the string
+    strncpy(desc, args[2], desc_length);
 
     // replace any newlines with spaces
-    replace_string_non_printables(title, TASK_TITLE_MAX_LENGTH);
-    replace_string_non_printables(desc, TASK_DESCRIPTION_MAX_LENGTH);
+    replace_string_non_printables(title, title_length);
+    replace_string_non_printables(desc, desc_length);
 
     // create the new task
     Task* task = task_new(title, desc);
