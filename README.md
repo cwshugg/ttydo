@@ -5,7 +5,7 @@
   ▄▄▄▄▄ ▄  █ ▄▄▄▄▄    ===========================
         ▀▀▀▀
 ```
-I use the command line all the time. Git, Vim, shell scripting, you name it. While I use other external tools to keep track of large tasks and goals (such as [Notion](https://www.notion.so/)), I always find myself finding ways to keep track of smaller tasks without having to leave the terminal. (Such as: `echo "TODO: 1. <this> 2. <that> 3. <profit>`, and `git commit -m "finished <this>. TODO NEXT: <that>"`.)
+I use the command line all the time. Git, Vim, shell scripting, you name it. While I use other external tools to keep track of large tasks and goals (such as [Notion](https://www.notion.so/)), I always find myself finding ways to keep track of smaller tasks without having to leave the terminal. (Such as: `echo "TODO: 1. <this> 2. <that> 3. <profit>"`, and `git commit -m "finished <this>. TODO NEXT: <that>"`.)
 
 This inspired me to look into creating a command-line ToDo tracker. While there are some great solutions already out in the world, I was itching to write some C code after a college semester of Rust, JavaScript, and Java. `ttydo` is the result.
 

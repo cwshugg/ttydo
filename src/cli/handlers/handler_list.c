@@ -148,6 +148,14 @@ int handle_list_add(Command* comm, int argc, char** args)
         return 0;
     }
 
+    // if the given name doesn't start with a letter, complain and return
+    if (!args[0] || *args[0] < 65 || *args[0] > 122 ||
+        (*args[0] > 90 && *args[0] < 97))
+    {
+        eprintf("List names must begin with a letter.\n");
+        return 1;
+    }
+
     // make a new task list
     char* name = args[0];
     TaskList* list = task_list_new(name);
