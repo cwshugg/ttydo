@@ -138,7 +138,7 @@ int handle_task_add(Command* comm, int argc, char** args)
         return 0;
     }
 
-    // if no arguments were given, print a usage message
+    // if too few arguments were given, print a usage message
     if (argc < 3)
     {
         print_usage("task add <LIST> \"<TASK_NAME>\" \"<TASK_DESCRIPTION>\"");
@@ -187,7 +187,71 @@ int handle_task_add(Command* comm, int argc, char** args)
 
 int handle_task_delete(Command* comm, int argc, char** args)
 {
-    printf("TODO: Implement 'delete'\n");
+    // if we don't have any lists, print and return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // if too few arguments were given, print a usage message
+    if (argc < 2)
+    {
+        print_usage("task delete <LIST> <TASK>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n");
+        return 0;
+    }
+
+    // take the first argument and attempt to locate the correct list
+    int tl_index = tasklist_array_find(args[0]);
+    if (tl_index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 1;
+    }
+    TaskList* list = tasklists[tl_index];
+
+    // attempt to convert the next argument to an integer (task index) OR
+    // use it as a title name for a task. Either way, we'll search the task
+    // list for the appropriate task.
+    char* end;
+    long index = strtol(args[1], &end, 10);
+    Task* task = NULL;
+    if (index > 0)
+    { task = task_list_get_by_index(list, index - 1); }
+    
+    // parse the title string and replace any strange characters with
+    // spaces
+    char title[TASK_TITLE_MAX_LENGTH + 1] = {'\0'};
+    int title_length = truncate_string(args[1], title,
+                                    TASK_TITLE_MAX_LENGTH);
+    replace_string_non_printables(title, title_length);
+
+    // search by title if we dont have an index
+    if (index == 0)
+    { task = task_list_get_by_title(list, title); }
+
+    // if we didn't find a task, print and return
+    if (!task)
+    {
+        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
+                list->name, title);
+        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
+                list->size);
+        return 1;
+    }
+
+    // attempt to remove the task from the list
+    if (!task_list_remove(list, task))
+    { fatality(1, "Failed to remove task from the list.\n"); }
+    
+    // free the removed task's memory and save the task list
+    task_free(task);
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to disk."); }
+
     return 0;
 }
 
