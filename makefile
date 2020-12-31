@@ -15,6 +15,8 @@ SOURCE_ARGS=$(SOURCE_DIR)/*.c $(SOURCE_VISUAL_DIR)/*.c $(SOURCE_CLI_DIR)/*.c $(S
 SOURCE_ARGS_NO_CLI=$(SOURCE_DIR)/*.c $(SOURCE_VISUAL_DIR)/*.c
 # testing
 TEST=you_need_to_specify_a_C_source_file_for_TEST_SOURCE
+# installation
+INSTALL_LOCATION=/usr/local/bin
 
 default: all
 
@@ -32,5 +34,5 @@ clean:
 
 install:
 	make all
-	mv ttydo /usr/local/bin/ttydo
+	mv ttydo $(INSTALL_LOCATION)/ttydo
 

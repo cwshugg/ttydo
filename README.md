@@ -10,7 +10,7 @@ I use the command line all the time. Git, Vim, shell scripting, you name it. Whi
 This inspired me to look into creating a command-line ToDo tracker. While there are some great solutions already out in the world, I was itching to write some C code after a college semester of Rust, JavaScript, and Java. `ttydo` is the result.
 
 # Installation and Usage
-To install, run `sudo make install`. This should build the program and move it to `/usr/local/bin`.
+To install, run `make install` (with or without `sudo` as necessary). This should build the program and move it to `/usr/local/bin`. If you'd like to install it in another location, run `make install INSTALL_LOCATION=<path>`.
 
 Using ttydo is pretty simple. Extensive 'help' menus are displayed for every possible command. To view them, execute `ttydo help`. Each command has sub-commands, such as `task add` or `task delete`. These can be viewed by adding `help` after the command name (such as `task help`).
 
