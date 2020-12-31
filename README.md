@@ -9,6 +9,14 @@ I use the command line all the time. Git, Vim, shell scripting, you name it. Whi
 
 This inspired me to look into creating a command-line ToDo tracker. While there are some great solutions already out in the world, I was itching to write some C code after a college semester of Rust, JavaScript, and Java. `ttydo` is the result.
 
+# Installation and Usage
+To install, run `sudo make install`. This should build the program and move it to `/usr/local/bin`.
+
+Using ttydo is pretty simple. Extensive 'help' menus are displayed for every possible command. To view them, execute `ttydo help`. Each command has sub-commands, such as `task add` or `task delete`. These can be viewed by adding `help` after the command name (such as `task help`).
+
+# Task Storage
+To store task lists, ttydo attempts to create and write files to `~/.ttydo`. These `.tasklist` files are in plaintext and in a comma-separated format.
+
 # Example
 Here's an example of what a single task list in ttydo might look like:
 ```
@@ -21,9 +29,10 @@ Here's an example of what a single task list in ttydo might look like:
 └────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-
 # Future Goals
 These are things that I'd like to implement into `ttydo`:
 
 - Add the ability for tasks to have @tags
   - Let tasks be searchable/displayed by tags
+- Add convenience commands (clear a task list, check off all tasks, etc.)
+

@@ -30,3 +30,7 @@ test:
 clean:
 	rm -f ttydo
 
+install:
+	make all
+	mv ttydo /usr/local/bin/ttydo
+
