@@ -35,9 +35,6 @@ These are things that I'd like to implement into `ttydo`:
 - Add the ability for tasks to have @tags
   - Let tasks be searchable/displayed by tags
 - Add convenience commands
-  - Clear a task list
-  - Check off all tasks in a list
-  - Rename task lists
   - Reorder tasks
 
 If you happen to stumble across this repo and have ideas of your own, feel free to share them with me, or open up a pull request!

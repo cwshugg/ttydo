@@ -9,12 +9,14 @@
 #include <string.h>
 #include "handlers.h"
 #include "../utils.h"
+#include "../../scribe.h"
 
 // Function prototypes
 int handle_list_help(Command* comm, int argc, char** args);
 int handle_list_add(Command* comm, int argc, char** args);
 int handle_list_delete(Command* comm, int argc, char** args);
-int find_task_list(char* input);
+int handle_list_rename(Command* comm, int argc, char** args);
+int list_name_is_valid(char* name);
 
 
 // ============================== Initializer ============================== //
@@ -27,7 +29,7 @@ Command* init_command_list()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 3)) { return NULL; }
+    if (command_init_subcommands(result, 4)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_list_help);
@@ -37,6 +39,9 @@ Command* init_command_list()
     result->subcommands[2] = command_new("Delete", "d", "delete",
         "Deletes an existing task list.",
         handle_list_delete);
+    result->subcommands[3] = command_new("Rename", "r", "rename",
+        "Renames an existing task list.",
+        handle_list_rename);
 
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
@@ -149,8 +154,7 @@ int handle_list_add(Command* comm, int argc, char** args)
     }
 
     // if the given name doesn't start with a letter, complain and return
-    if (!args[0] || *args[0] < 65 || *args[0] > 122 ||
-        (*args[0] > 90 && *args[0] < 97))
+    if (!list_name_is_valid(args[0]))
     {
         eprintf("List names must begin with a letter.\n");
         return 1;
@@ -208,7 +212,69 @@ int handle_list_delete(Command* comm, int argc, char** args)
         return 1;
     }
 
-    // print a success message and return
-    //printf("Task list \"%s\" deleted successfully.\n", lname);
     return 0;
+}
+
+// Handles the 'rename' sub command
+int handle_list_rename(Command* comm, int argc, char** args)
+{
+    if (argc < 2)
+    {
+        print_usage("list rename <LIST> <NEW NAME>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        return 0;
+    }
+
+    // if we don't have any task lists, return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // take the argument and try to find an index of a task list
+    int index = tasklist_array_find(args[0]);
+    if (index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 0;
+    }
+    TaskList* list = tasklists[index];
+
+    // make a local copy of the proposed new name, with length restrictions
+    char new_name[TASK_LIST_NAME_MAX_LENGTH + 1] = {'\0'};
+    strncpy(new_name, args[1], TASK_LIST_NAME_MAX_LENGTH);
+
+    // check the name for validity
+    if (!list_name_is_valid(new_name))
+    {
+        eprintf("List names must begin with a letter.\n");
+        return 1;
+    }
+
+    // delete the old list file from memory
+    if (delete_task_list(list))
+    { eprintf("Couldn't delete old list file.\n"); }
+
+    // duplicate the new name and save the list to a new file
+    free(list->name);
+    list->name = strdup(new_name);
+    return save_task_list(list);
+}
+
+
+// =========================== Helper Functions ============================ //
+// Checks a given string to see if it's a valid list name. Returns 1 if so and
+// 0 if not.
+int list_name_is_valid(char* name)
+{
+    if (!name) { return 0; }
+
+    // if the name doesn't begin with a letter, return 1
+    if (!name || *name < 65 || *name > 122 ||
+        (*name > 90 && *name < 97))
+    { return 0; }
+    
+    return 1; // success
 }

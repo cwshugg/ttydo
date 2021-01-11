@@ -325,10 +325,6 @@ int handle_task_mark(Command* comm, int argc, char** args)
 
     // invert the 'is_complete' flag for the task
     task->is_complete = !task->is_complete;
-    if (task->is_complete)
-    { printf("Task marked as complete.\n"); }
-    else
-    { printf("Task marked as incomplete.\n"); }
     
     // save the task list
     if (save_task_list(list))
