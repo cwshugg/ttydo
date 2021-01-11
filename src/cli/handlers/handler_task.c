@@ -17,6 +17,8 @@ int handle_task_delete(Command* comm, int argc, char** args);
 int handle_task_mark(Command* comm, int argc, char** args);
 int truncate_string(char* original, char* copy, int max_length);
 Task* find_task(TaskList* list, char* input, char** title);
+int delete_all_tasks(TaskList* list);
+int mark_all_tasks(TaskList* list);
 
 
 // ============================== Initializer ============================== //
@@ -206,6 +208,9 @@ int handle_task_delete(Command* comm, int argc, char** args)
         print_usage("task delete <LIST> <TASK>");
         printf("Where <LIST> is either a list's name or number.\n");
         printf("Where <TASK> is either a task's name or number.\n");
+        // print wildcard info
+        printf("Replacing <TASK> with \"%s\" will delete all tasks from the list.\n",
+               WILDCARD_ALL);
         return 0;
     }
 
@@ -225,6 +230,10 @@ int handle_task_delete(Command* comm, int argc, char** args)
         printf("This list has no tasks.\n");
         return 0;
     }
+
+    // check for the '*' wildcard
+    if (!strncmp(args[1], WILDCARD_ALL, 1) && strlen(args[1]) == 1)
+    { return delete_all_tasks(list); }
 
     // next, attempt to find the task within the task list
     char* title = NULL;
@@ -269,7 +278,11 @@ int handle_task_mark(Command* comm, int argc, char** args)
     {
         print_usage("task mark <LIST> <TASK>");
         printf("Where <LIST> is either a list's name or number.\n");
-        printf("Where <TASK> is either a task's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n\n");
+        // print wildcard info
+        printf("Replacing <TASK> with \"%s\" will mark all tasks as complete. "
+               "If all tasks are already marked as complete, the opposite will happen.\n",
+               WILDCARD_ALL);
         return 0;
     }
 
@@ -289,6 +302,10 @@ int handle_task_mark(Command* comm, int argc, char** args)
         printf("This list has no tasks.\n");
         return 0;
     }
+
+    // check for the '*' wildcard
+    if (!strncmp(args[1], WILDCARD_ALL, 1) && strlen(args[1]) == 1)
+    { return mark_all_tasks(list); }
     
     // next, attempt to find the task within the task list
     char* title = NULL;
@@ -367,4 +384,63 @@ Task* find_task(TaskList* list, char* input, char** cleaned_input)
     { task = task_list_get_by_title(list, title); }
 
     return task;
+}
+
+// Takes in a task list and deletes all tasks from it. Returns 0 on success
+// and a nonzero value on error.
+int delete_all_tasks(TaskList* list)
+{
+    if (!list) { return 1; }
+
+    // iterate through the number of tasks in the list
+    while (list->size > 0)
+    {
+        // retrieve the task
+        Task* task = task_list_get_by_index(list, 0);
+        if (!task) { return 1; }
+
+        // remove it from the list and free its memory
+        task = task_list_remove(list, task);
+        if (task) { task_free(task); }
+    }
+
+    // save the task list to disc
+    return save_task_list(list);
+}
+
+// Takes in a task list and marks all tasks as completed, as long as at least
+// one task is incomplete. If every task is already marked as completed, all
+// the tasks will be set to incomplete. Returns 0 on success and a nonzero
+// value on error.
+int mark_all_tasks(TaskList* list)
+{
+    if (!list) { return 1; }
+
+    // iterate through every task in the list and count the completions. Mark
+    // any incomplete tasks as completed.
+    int completions = 0;
+    for (int i = 0; i < list->size; i++)
+    {
+        Task* task = task_list_get_by_index(list, i);
+        if (!task) { continue; }
+
+        // if the task isn't complete, mark it as so. Otherwise, if it's
+        // already complete, increment the counter
+        if (!task->is_complete) { task->is_complete = 1; }
+        else { completions++; }
+    }
+
+    // if all of the tasks were already complete, we'll mark them all as
+    // incomplete
+    if (completions == list->size)
+    {
+        for (int i = 0; i < list->size; i++)
+        {
+            Task* task = task_list_get_by_index(list, i);
+            if (task) { task->is_complete = 0; }
+        }
+    }
+
+    // write the modified list to disk
+    return save_task_list(list);
 }

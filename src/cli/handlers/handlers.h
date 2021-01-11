@@ -10,6 +10,8 @@
 #include "../../tasklist.h"
 
 // ============================ Globals/Macros ============================= //
+// Wildcards
+#define WILDCARD_ALL "@"    // used to specify ALL of something by the user
 // Command globals
 extern int NUM_COMMANDS;    // reference to command count
 extern Command** commands;  // reference to command array
