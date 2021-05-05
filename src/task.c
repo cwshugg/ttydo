@@ -10,8 +10,11 @@
 #include <errno.h>
 #include "task.h"
 
-// ====================== Helper Function Prototypes ======================= //
+// ================ Defines and Helper Function Prototypes ================= //
+#define TASK_COMMA_SCRIBE_STRING "<COMMA>" // when commas appear in task text
 uint64_t generate_task_id(char* title);
+int count_substring(char* text, int length, char* substring);
+int replace_substring(char** text, int length, char* substring, char* replacement);
 
 
 // ============================== Task Struct ============================== //
@@ -193,6 +196,74 @@ uint64_t generate_task_id(char* description)
     return sum;
 }
 
+// Counts the number of substrings in the given text.
+int count_substring(char* text, int length, char* substring)
+{
+    char* current = text;
+    int sub_occurrences = 0;
+    while (current && current < text + length)
+    {
+        // search for the substring, and increment if found
+        current = strstr(current, substring);
+        if (current)
+        {
+            sub_occurrences++;
+            current++;
+        }
+    }
+    return sub_occurrences;
+}
+
+// Helper function for scribe string generation that takes in some dynamically-
+// -allocated text, its length, a substring, and a replacement string, and
+// replaces all occurrences of 'substring' with 'replacement', reallocing if
+// necessary. The new string length is returned.
+int replace_substring(char** text, int length, char* substring, char* replacement)
+{
+    // get the length of the two string args
+    int sub_length = strlen(substring);
+    int rep_length = strlen(replacement);
+
+    // count the occurrences of the substring in the string
+    int sub_occurrences = count_substring(*text, length, substring);
+
+    // if there are no occurrences, just return the same length
+    if (sub_occurrences == 0)
+    { return length; }
+    
+    // otherwise, make a local copy of the string
+    char temp[length + 1];
+    snprintf(temp, length + 1, "%s", *text);
+
+    // use the amount of substrings to determine the new length of the string
+    // (reallocate if necessary)
+    int new_length = length + (sub_occurrences * (rep_length - sub_length));
+    if (new_length > length)
+    { *text = realloc(*text, (new_length + 1) * sizeof(char)); }
+
+    // copy each character in from the temporary copy
+    char* c1 = *text;
+    char* c2 = temp;
+    for (int i = 0; i < length && c1 < *text + new_length; i++)
+    {
+        // if the current location of the text contains the substring, we'll
+        // instead write the replacement
+        if (!strncmp(c2, substring, sub_length))
+        {
+            snprintf(c1, rep_length + 1, "%s", replacement);
+            c1 += rep_length;
+            c2 += sub_length;
+            continue;
+        }
+
+        // otherwise, we'll just copy the current byte and move to the next
+        *(c1++) = *(c2++);
+    }
+    *c1 = '\0';
+
+    return new_length;
+}
+
 
 // ========================== File String Parsing ========================== //
 char* task_get_scribe_string(Task* task)
@@ -201,31 +272,36 @@ char* task_get_scribe_string(Task* task)
     if (!task) { return NULL; }
 
     // if no title is given, use the default string
-    char* title = task->title;
-    if (!title) { title = TASK_DEFAULT_TITLE; }
+    if (!task->title)
+    {
+        int length = strlen(TASK_DEFAULT_TITLE);
+        task->title = calloc(length + 1, sizeof(char));
+        snprintf(task->title, length + 1, "%s", TASK_DEFAULT_TITLE);
+    }
     // if no description is given, use the default string
-    char* desc = task->description;
-    if (!desc) { desc = TASK_DEFAULT_DESCRIPTION; }
+    if (!task->description)
+    {
+        int length = strlen(TASK_DEFAULT_DESCRIPTION);
+        task->description = calloc(length + 1, sizeof(char));
+        snprintf(task->description, length + 1, "%s", TASK_DEFAULT_DESCRIPTION);
+    }
 
     // convert the task's ID to a string
     int id_string_max_length = 24;
     char id_string[id_string_max_length];
-    memset(id_string, 0, id_string_max_length);
     snprintf(id_string, id_string_max_length, "%lu", task->id);
 
     // convert the task's 'is_complete' to a string
     int complete_string_max_length = 2;
     char complete_string[complete_string_max_length];
-    memset(complete_string, 0, complete_string_max_length);
     snprintf(complete_string, complete_string_max_length, "%d",
             task->is_complete != 0);
 
     // calculate the lengths of strings
     int id_length = strlen(id_string);
     int complete_length = strlen(complete_string);
-    int title_length = strlen(title);
-    int desc_length = strlen(desc);
-    int total_length = id_length + complete_length + title_length + desc_length;
+    int title_length = strlen(task->title);
+    int desc_length = strlen(task->description);
 
     // adjust the lengths of the title and description to fit their maximum
     // length bounds (TASK_TITLE_MAX_LENGTH, TASK_DESCRIPTION_MAX_LENGTH)
@@ -234,21 +310,27 @@ char* task_get_scribe_string(Task* task)
         title_length = TASK_TITLE_MAX_LENGTH;
         task->title = realloc(task->title, (title_length + 1) * sizeof(char));
         task->title[title_length] = '\0';
-        title = task->title;
     }
     if (task->description && desc_length > TASK_DESCRIPTION_MAX_LENGTH)
     {
         desc_length = TASK_DESCRIPTION_MAX_LENGTH;
         task->description = realloc(task->description, (desc_length + 1) * sizeof(char));
         task->description[desc_length] = '\0';
-        desc = task->description;
     }
+
+    // first, we'll replace the commas with our comma marker in the strings
+    title_length = replace_substring(&task->title, title_length, ",",
+                                     TASK_COMMA_SCRIBE_STRING);
+    desc_length = replace_substring(&task->description, desc_length, ",",
+                                    TASK_COMMA_SCRIBE_STRING);
+    // compute the total length
+    int total_length = id_length + complete_length + title_length + desc_length;
 
     // allocate a new string
     int safety_pad = 16;
     char* result = calloc(total_length + safety_pad, sizeof(char));
     snprintf(result, total_length + safety_pad, "%s,%s,%s,%s", id_string,
-             complete_string, title, desc);
+             complete_string, task->title, task->description);
     return result;
 }
 
@@ -257,10 +339,16 @@ Task* task_new_from_scribe_string(char* string)
     // check for a NULL string pointer
     if (!string) { return NULL; }
 
+    // first, count the number of <COMMA> markers in the text (we don't count
+    // these as part of the enforced max lengths, since they're used to replace
+    // commas entered by the user)
+    int length = strlen(string);
+    int comma_marker_count = count_substring(string, length, TASK_COMMA_SCRIBE_STRING);
+
     // This string is likely coming straight from a file. To be safe, we need
     // to impose a maximum length the string can have.
-    int length = strlen(string);
-    int max_length = TASK_TITLE_MAX_LENGTH + TASK_DESCRIPTION_MAX_LENGTH + 32;
+    int max_length = TASK_TITLE_MAX_LENGTH + TASK_DESCRIPTION_MAX_LENGTH + 32 +
+                     (comma_marker_count * (strlen(TASK_COMMA_SCRIBE_STRING) - 1));
     if (length > max_length) { length = max_length; }
 
     // make a local copy of the string of the correct length
@@ -290,14 +378,34 @@ Task* task_new_from_scribe_string(char* string)
     // if it IS NULL, we'll keep it, since we can initialize a Task with a
     // NULL title
     char* title = strtok(NULL, ",");
+    if (title)
+    {
+        // make a heap-allocated copy and use it to replace any comma markers
+        // with actual commas
+        title = strdup(title);
+        replace_substring(&title, strlen(title),
+                          TASK_COMMA_SCRIBE_STRING, ",");
+    }
     
     // ---------- PIECE 4: description ---------- //
     // the same goes for the description as it does for the title: if it's
     // NULL, we'll keep the NULL value.
     char* description = strtok(NULL, ",");
+    if (description)
+    {
+        // make a heap-allocated copy and use it to replace any comma markers
+        // with actual commas
+        description = strdup(description);
+        replace_substring(&description, strlen(description),
+                          TASK_COMMA_SCRIBE_STRING, ",");
+    }
 
-    // create a new Task* struct
+    // create a new Task* struct and free strings as necessary
     Task* result = task_new(title, description);
+    if (title) { free(title); }
+    if (description) { free(description); }
+
+    // if creating the task failed, return NULL
     if (!result) { return NULL; }
 
     // override the ID field (in case it was generated differently) and set
