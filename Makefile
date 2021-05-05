@@ -3,7 +3,7 @@
 #   Connor Shugg
 
 CC=clang
-CC_ARGS=-Wall -Werror
+CFLAGS=-Wall -Werror
 # source directories
 SOURCE_DIR=./src
 SOURCE_VISUAL_DIR=$(SOURCE_DIR)/visual
@@ -21,13 +21,13 @@ INSTALL_LOCATION=/usr/local/bin
 default: all
 
 all:
-	$(CC) $(CC_ARGS) $(SOURCE_ARGS) -o ttydo
+	$(CC) $(SOURCE_ARGS) -o ttydo
 
 all-debug:
-	$(CC) $(CC_ARGS) -g $(SOURCE_ARGS) -o ttydo
+	$(CC) -g $(SOURCE_ARGS) -o ttydo
 
 test:
-	$(CC) $(CC_ARGS) -g $(SOURCE_ARGS_NO_CLI) $(TEST) -o TEST
+	$(CC) -g $(SOURCE_ARGS_NO_CLI) $(TEST) -o ttydo-test
 
 clean:
 	rm -f ttydo
