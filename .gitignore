@@ -1,4 +1,5 @@
 # ignore binaries
 src/ttydo
 ttydo
+ttydo-test
 
