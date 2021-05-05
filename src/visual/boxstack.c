@@ -93,8 +93,8 @@ void box_stack_print(BoxStack* stack)
             // boxes.
             if (i > 0 && j == 0)
             {
-                strncpy(lines[j], BOX_L_CROSS, strlen(BOX_L_CROSS));
-                strncpy(lines[j] + strlen(lines[j]) - strlen(BOX_TR_CORNER),
+                memmove(lines[j], BOX_L_CROSS, strlen(BOX_L_CROSS));
+                memmove(lines[j] + strlen(lines[j]) - strlen(BOX_TR_CORNER),
                         BOX_R_CROSS, strlen(BOX_R_CROSS));
             }
             fprintf(stdout, "%s\n", lines[j]);

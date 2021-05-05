@@ -247,6 +247,10 @@ int print_subcommands(Command* comm, char* title)
     // 300 to be safe.
     char* box_string = calloc(300 * arr_length, sizeof(char));
     if (!box_string) { return 1; }
+    
+    // maintain the box string's length and use a maximum for each comm string
+    int box_string_length = 0;
+    int comm_string_max_length = 256;
 
     // iterate through each command build a giant string to go in a box
     int longest_length = 0;
@@ -254,11 +258,16 @@ int print_subcommands(Command* comm, char* title)
     {
         // make the string, append it to the master string, then free it
         char* comm_string = command_to_string(arr[i]);
-        strcat(box_string, comm_string);
+        box_string_length += snprintf(box_string + box_string_length,
+                                      comm_string_max_length, "%s",
+                                      comm_string);
 
         // append a newline, if necessary
         if (i < arr_length - 1)
-        { strcat(box_string, "\n"); }
+        {
+            box_string_length += snprintf(box_string + box_string_length,
+                                          2, "\n");
+        }
 
         // update the maximum line length
         int length = strlen(comm_string) + 1;
@@ -298,8 +307,10 @@ void print_list_item(int index, char* string)
 {
     if (!string) { return; }
 
-    char number[8];
-    sprintf(number, "%d.", index);
+    int number_max_length = 8;
+    char number[number_max_length];
+    memset(number, 0, number_max_length);
+    snprintf(number, number_max_length, "%d.", index);
     printf("%-3s %s\n", number, string);
 }
 

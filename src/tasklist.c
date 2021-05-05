@@ -59,7 +59,7 @@ TaskList* task_list_new(char* list_name)
         return NULL;
     }
     // copy the name into the list's field
-    strncpy(list->name, list_name, name_length);
+    snprintf(list->name, name_length + 1, "%s", list_name);
 
     // initialize the head, tail, and size to be NULL and 0
     list->head = NULL;
@@ -243,10 +243,15 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
 
     // add each task string to the box string (and free the individual task
     // strings along the way)
+    int box_string_length = 0;
     for (int i = 0; i < list->size; i++)
     {
-        strncat(box_string, task_strings[i], strlen(task_strings[i]));
-        if (i < list->size - 1) { strncat(box_string, "\n", 1); }
+        int task_string_length = strlen(task_strings[i]);
+        memmove(box_string + box_string_length, task_strings[i], task_string_length);
+        box_string_length += task_string_length;
+
+        if (i < list->size - 1)
+        { memmove(box_string + box_string_length++, "\n", 1);}
         free(task_strings[i]);
     }
 
@@ -308,7 +313,7 @@ char* task_list_get_scribe_string(TaskList* list)
     char* result = calloc(length + 1, sizeof(char));
 
     // copy the list name in, then the list size
-    strncpy(result, list->name, name_length);
+    snprintf(result, name_length + 1, "%s", list->name);
     snprintf(result + name_length, length - name_length, ",%d", list->size);
     return result;
 }
@@ -330,8 +335,7 @@ TaskList* task_list_new_from_scribe_string(char* string)
 
     // copy the name of the task list
     char name[name_length + 1];
-    memset(name, 0, name_length + 1);
-    strncpy(name, string, name_length);
+    snprintf(name, name_length + 1, "%s", string);
 
     // create a new TaskList with the name
     TaskList* result = task_list_new(name);

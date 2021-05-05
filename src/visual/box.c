@@ -222,14 +222,24 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
 void fill_box_line(char** line, int width, char* left_edge,
                    char* middle, char* right_edge)
 {
-    // write the left edge
-    strncat(*line, left_edge, strlen(left_edge));
-    // write the middle characters
+    // compute lengths
+    int length = strlen(*line);
+    int left_length = strlen(left_edge);
     int middle_length = strlen(middle);
+    int right_length = strlen(right_edge);
+
+    // write the left edge
+    memmove(*line + length, left_edge, left_length);
+    length += left_length;
+
+    // write the middle characters
     for (int i = 0; i < width - 2; i++)
-    { strncat(*line, middle, middle_length); }
+    {
+        memmove(*line + length, middle, middle_length);
+        length += middle_length;
+    }
     // write the right edge
-    strncat(*line, right_edge, strlen(right_edge));
+    memmove(*line + length, right_edge, right_length);
 }
 
 // Helper function that works the same way as 'fill_box_line', but it attempts
@@ -253,30 +263,40 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
     // of characters
     char title_copy[title_length + 1];
     memset(title_copy, 0, title_length + 1);
+    int title_copy_length = 0;
     if (has_runoff)
     {
         int runoff_length = strlen(BOX_TEXT_RUNOFF);
-        strncat(title_copy, title, title_length - runoff_length);
-        strncat(title_copy, BOX_TEXT_RUNOFF, runoff_length);
+        // add a portion of the title
+        memmove(title_copy, title, title_length - runoff_length);
+        title_copy_length += title_length - runoff_length;
+        // add the runoff text
+        memmove(title_copy + title_copy_length, BOX_TEXT_RUNOFF, runoff_length);
+        title_copy_length += runoff_length;
     }
     else
-    { strncat(title_copy, title, title_length); }
+    {
+        memmove(title_copy, title, title_length);
+        title_copy_length += title_length;
+    }
 
     // otherwise, fill the string
-    strncat(*line, BOX_TL_CORNER, strlen(BOX_TL_CORNER));
-    strncat(*line, BOX_H_LINE, strlen(BOX_H_LINE));
-    strncat(*line, " ", 1);
-    strncat(*line, title_copy, title_length);
-    strncat(*line, " ", 1);
+    int line_length = strlen(*line);
+    line_length += snprintf(*line, strlen(BOX_TL_CORNER) + strlen(BOX_H_LINE) +
+                            title_length + 3, "%s%s %s ",
+                            BOX_TL_CORNER, BOX_H_LINE, title_copy);
     int current_length = title_length + 4;
 
     // fill the remaining spots (except the last) with the middle string
     int middle_length = strlen(middle);
     for (int i = current_length; i < width - 1; i++)
-    { strncat(*line, middle, middle_length); }
+    {
+        memmove(*line + line_length, middle, middle_length);
+        line_length += middle_length;
+    }
 
     // fill the final spot with the right edge string
-    strncat(*line, right_edge, strlen(right_edge));
+    memmove(*line + line_length, right_edge, strlen(right_edge));
 
     // success - return 0
     return 0;
@@ -311,24 +331,26 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
 
     // make a local copy of the text of the appropriate length
     char text_copy[copied_text_length + 1];
-    strncpy(text_copy, text, copied_text_length);
+    snprintf(text_copy, copied_text_length + 1, "%s", text);
     // if we couldn't fit all the text, add the 'runoff indicator' to the end
     if (text_length > available_length)
-    { strncpy(text_copy + copied_text_length - runoff_length, BOX_TEXT_RUNOFF, runoff_length); }
+    {
+        snprintf(text_copy + copied_text_length - runoff_length, runoff_length + 1,
+                 "%s", BOX_TEXT_RUNOFF);
+    }
 
     // write the left edge
-    strncat(*line, left_edge, strlen(left_edge));
-    strncat(*line, " ", 1);
+    int length = strlen(*line);
+    length += snprintf(*line + length, strlen(left_edge) + 2, "%s ", left_edge);
 
     // write the middle characters
-    strncat(*line, text_copy, copied_text_length);
+    length += snprintf(*line + length, copied_text_length + 1, "%s", text_copy);
     int middle_length = strlen(middle);
     for (int i = 0; i < width - 4 - copied_text_length; i++)
-    { strncat(*line, middle, middle_length); }
+    { length += snprintf(*line + length, middle_length + 1, "%s", middle); }
 
     // write the right edge
-    strncat(*line, " ", 1);
-    strncat(*line, right_edge, strlen(right_edge));
+    length += snprintf(*line + length, strlen(right_edge) + 2, " %s", right_edge);
 
     return 0;
 }
@@ -364,8 +386,7 @@ char** split_text_by_newline(char* text)
 
     // make a local copy of the text
     char text_copy[text_length + 1];
-    memset(text_copy, 0, text_length + 1);
-    strncpy(text_copy, text, text_length);
+    snprintf(text_copy, text_length + 1, "%s", text);
     // repeatedly find the occurrences of each "\n" and use it to copy each
     // line into a new string
     char* current = text_copy;
@@ -378,7 +399,7 @@ char** split_text_by_newline(char* text)
         lines[i] = calloc(line_length + 1, sizeof(char));
         /* calloc check */ if (!lines[0])
         /* calloc check */ { return free_string_array(lines, i); }
-        strncpy(lines[i], line, line_length);
+        snprintf(lines[i], line_length + 1, "%s", line);
 
         // update the pointer to NULL for all future calls of strtok()
         current = NULL;

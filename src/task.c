@@ -37,7 +37,7 @@ Task* task_new(char* title, char* desc)
             return NULL;
         }
         // copy the description string
-        strncpy(task->description, desc, desc_length);
+        snprintf(task->description, desc_length + 1, "%s", desc);
     }
 
     // find the correct amount of characters to copy from the title string
@@ -57,7 +57,7 @@ Task* task_new(char* title, char* desc)
             return NULL;
         }
         // copy over the correct amount of characters into the title string
-        strncpy(task->title, title, title_length);
+        snprintf(task->title, title_length + 1, "%s", title);
     }
     else { task->title = NULL; }
 
@@ -96,27 +96,38 @@ char* task_to_string(Task* task)
     int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) + 16;
     char* result = calloc(title_length + desc_length + pad, sizeof(char));
     if (!result) { return NULL; }
+    int result_length = 0;
 
     // add a "[ ]" or "[X]" to use for a 'task.is_complete' indicator
     if (task->is_complete)
-    { strncat(result, "[X] ", 4); }
+    { result_length += snprintf(result, 5, "[X] "); }
     else
-    { strncat(result, "[ ] ", 4); }
+    { result_length += snprintf(result, 5, "[ ] "); }
 
     // copy the title in
     if (task->title)
-    { strncat(result, task->title, title_length); }
+    {
+        result_length += snprintf(result + result_length, title_length + 3,
+                                  "%s: ", task->title);
+    }
     else
-    { strncat(result, TASK_DEFAULT_TITLE, strlen(TASK_DEFAULT_TITLE)); }
-
-    // copy a separator in
-    strncat(result, ": ", 2);
+    {
+        result_length += snprintf(result + result_length, strlen(TASK_DEFAULT_TITLE) + 3,
+                                  "%s: ", TASK_DEFAULT_TITLE);
+    }
 
     // copy the description in
     if (task->description)
-    { strncat(result, task->description, desc_length); }
+    {
+        result_length += snprintf(result + result_length, desc_length + 1,
+                                  "%s", task->description);
+    }
     else
-    { strncat(result, TASK_DEFAULT_DESCRIPTION, strlen(TASK_DEFAULT_DESCRIPTION)); }
+    {
+        result_length += snprintf(result + result_length,
+                                  strlen(TASK_DEFAULT_DESCRIPTION) + 1,
+                                  "%s", TASK_DEFAULT_DESCRIPTION);
+    }
     
     return result;
 }
@@ -139,7 +150,7 @@ uint64_t generate_task_id(char* description)
     // if we were given a string, copy it in
     if (description)
     {
-        strncpy(local, description, string_length);
+        snprintf(local, string_length + 1, "%s", description);
         filled_length = string_length;
     }
 
@@ -157,8 +168,8 @@ uint64_t generate_task_id(char* description)
     for (int i = 0; i < length; i++)
     {
         // get a substring of characters
-        char sub[5] = {'\0'};
-        strncpy(sub, local + (i * 4), 4);
+        char sub[5];
+        snprintf(sub, 5, "%s", local + (i * 4));
 
         uint64_t multiplier = 1;
         for (int j = 0; j < strlen(sub); j++)
@@ -169,8 +180,8 @@ uint64_t generate_task_id(char* description)
     }
 
     // for the remaining characters: perform the same action
-    char sub[5] = {'\0'};
-    strncpy(sub, local + (length * 4), 4);
+    char sub[5];
+    snprintf(sub, 5, "%s", local + (length * 4));
     uint64_t multiplier = 1;
     for (int i = 0; i < strlen(sub); i++)
     {
@@ -197,12 +208,17 @@ char* task_get_scribe_string(Task* task)
     if (!desc) { desc = TASK_DEFAULT_DESCRIPTION; }
 
     // convert the task's ID to a string
-    char id_string[24] = {'\0'};
-    sprintf(id_string, "%lu", task->id);
+    int id_string_max_length = 24;
+    char id_string[id_string_max_length];
+    memset(id_string, 0, id_string_max_length);
+    snprintf(id_string, id_string_max_length, "%lu", task->id);
 
     // convert the task's 'is_complete' to a string
-    char complete_string[2] = {'\0'};
-    sprintf(complete_string, "%d", task->is_complete != 0);
+    int complete_string_max_length = 2;
+    char complete_string[complete_string_max_length];
+    memset(complete_string, 0, complete_string_max_length);
+    snprintf(complete_string, complete_string_max_length, "%d",
+            task->is_complete != 0);
 
     // calculate the lengths of strings
     int id_length = strlen(id_string);
@@ -249,8 +265,7 @@ Task* task_new_from_scribe_string(char* string)
 
     // make a local copy of the string of the correct length
     char local[length + 1];
-    memset(local, 0, length + 1);
-    strncpy(local, string, length);
+    snprintf(local, length + 1, "%s", string);
     
     // from here, we'll collect each comma-separated value, one at a time, to
     // build a new Task struct

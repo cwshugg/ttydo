@@ -74,20 +74,30 @@ int handle_list(Command* comm, int argc, char** args)
         }
 
         // make a "you have X lists" message
-        char count_message[128] = {'\0'};
-        sprintf(count_message, "You have %d task list", tasklist_array_length);
-        if (tasklist_array_length > 1) { strcat(count_message, "s"); }
-        strcat(count_message, ".");
+        int count_message_max_length = 128;
+        char count_message[count_message_max_length];
+        memset(count_message, 0, count_message_max_length);
+        int length = snprintf(count_message,
+                              count_message_max_length,
+                              "You have %d task list",
+                              tasklist_array_length);
+        // add "s", if necessary, and a period at the end
+        if (tasklist_array_length > 1)
+        { length += snprintf(count_message + length, 3, "s."); }
+        else
+        { length += snprintf(count_message + length, 2, "."); }
 
         // print the message, and a divider line
         printf("%s\n", count_message);
-        print_horizontal_line(strlen(count_message));
+        print_horizontal_line(length);
 
         // iterate through all lists
         for (int i = 0; i < tasklist_array_length; i++)
         {
-            char text[TASK_LIST_NAME_MAX_LENGTH + 8] = {'\0'};
-            sprintf(text, "%s", tasklists[i]->name);
+            int text_max_length = TASK_LIST_NAME_MAX_LENGTH + 8;
+            char text[text_max_length];
+            memset(text, 0, text_max_length);
+            snprintf(text, text_max_length, "%s", tasklists[i]->name);
             print_list_item(i + 1, text);
         }
         return 0;
@@ -201,10 +211,6 @@ int handle_list_delete(Command* comm, int argc, char** args)
         return 0;
     }
 
-    // save the task list's name for the success message
-    char lname[TASK_LIST_NAME_MAX_LENGTH] = {'\0'};
-    strcpy(lname, tasklists[index]->name);
-
     // remove from the task list. On failure, print a message and return
     if (tasklist_array_remove(index))
     {
@@ -244,7 +250,7 @@ int handle_list_rename(Command* comm, int argc, char** args)
 
     // make a local copy of the proposed new name, with length restrictions
     char new_name[TASK_LIST_NAME_MAX_LENGTH + 1] = {'\0'};
-    strncpy(new_name, args[1], TASK_LIST_NAME_MAX_LENGTH);
+    snprintf(new_name, TASK_LIST_NAME_MAX_LENGTH + 1, "%s", args[1]);
 
     // check the name for validity
     if (!list_name_is_valid(new_name))

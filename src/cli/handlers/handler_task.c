@@ -91,15 +91,17 @@ int handle_task(Command* comm, int argc, char** args)
             }
 
             // print out information about the task list
-            char text[TASK_LIST_NAME_MAX_LENGTH + 32] = {'\0'};
-            sprintf(text, "%s - ", tasklists[i]->name);
+            int text_max_length = TASK_LIST_NAME_MAX_LENGTH + 32;
+            char text[text_max_length];
+            memset(text, 0, text_max_length);
+            snprintf(text, text_max_length, "%s - ", tasklists[i]->name);
             if (tasklists[i]->size > 0)
             {
-                sprintf(text + strlen(text), "%d/%d completed", completions,
-                        tasklists[i]->size);
+                snprintf(text + strlen(text), 64, "%d/%d completed",
+                         completions, tasklists[i]->size);
             }
             else
-            { sprintf(text + strlen(text), "empty"); }
+            { snprintf(text + strlen(text), 6, "empty"); }
             print_list_item(i + 1, text);
         }
         return 0;
@@ -347,7 +349,7 @@ int truncate_string(char* original, char* copy, int max_length)
     if (length > max_length)
     { length = max_length; }
     // copy the string
-    strncpy(copy, original, length);
+    snprintf(copy, length + 1, "%s", original);
     return length;
 }
 

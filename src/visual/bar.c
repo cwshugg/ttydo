@@ -50,7 +50,7 @@ char* progress_bar_to_string(ProgressBar* bar)
     percent_string[percent_string_length] = '\0';
     snprintf(percent_string, percent_string_length + 1, "%-3d%%", (int) (bar->percentage * 100));
     // copy the local string to the result string
-    strncpy(result, percent_string, percent_string_length);
+    snprintf(result, percent_string_length + 1, "%s", percent_string);
 
     // -------------- Progress Bar String -------------- //
     // allocate the local string
@@ -58,20 +58,29 @@ char* progress_bar_to_string(ProgressBar* bar)
     char bar_string[bar_string_length + 1];
     bar_string[bar_string_length] = '\0';
     // copy the left border
-    snprintf(bar_string, 2 + PROGBAR_CHARACTER_SIZE, " %s", PROGBAR_L_BORDER);
+    int length = snprintf(bar_string, 2 + PROGBAR_CHARACTER_SIZE, " %s", PROGBAR_L_BORDER);
     // calculate the number of 'filled' slots vs the number of 'empty' slots
     int total_slots = bar->width - percent_string_length - 3;
     int filled_count = (int) ((float) total_slots * bar->percentage);
     // iterate and append bar characters
     for (int i = 0; i < total_slots; i++)
     {
-        if (i < filled_count) { strncat(bar_string, PROGBAR_FILLED, PROGBAR_CHARACTER_SIZE); }
-        else { strncat(bar_string, PROGBAR_EMPTY, PROGBAR_CHARACTER_SIZE); }
+        if (i < filled_count)
+        {
+            memmove(bar_string + length, PROGBAR_FILLED, PROGBAR_CHARACTER_SIZE);
+            length += PROGBAR_CHARACTER_SIZE;
+        }
+        else
+        {
+            memmove(bar_string + length, PROGBAR_EMPTY, PROGBAR_CHARACTER_SIZE);
+            length += PROGBAR_CHARACTER_SIZE;
+        }
     }
     // copy the right border
-    strncat(bar_string, PROGBAR_R_BORDER, PROGBAR_CHARACTER_SIZE);
+    memmove(bar_string + length, PROGBAR_R_BORDER, PROGBAR_CHARACTER_SIZE);
+    length += PROGBAR_CHARACTER_SIZE;
 
     // copy the bar string onto the end string, and return it
-    strncat(result, bar_string, bar_string_length);
+    memmove(result + strlen(result), bar_string, length);
     return result;
 }

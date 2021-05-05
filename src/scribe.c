@@ -187,7 +187,7 @@ int count_saved_task_lists(char*** list_names)
             // allocate a new string
             names[tasklist_count] = calloc(length + 1, sizeof(char));
             // copy the file name for the tasklist
-            strncat(names[tasklist_count], de->d_name, length);
+            snprintf(names[tasklist_count], length + 1, "%s", de->d_name);
 
             // increment the counter
             tasklist_count++;
@@ -224,9 +224,8 @@ char* get_home_directory()
 
     // ensure TTYDO_HOME_DIR is zeroed out
     memset(TTYDO_HOME_DIR, 0, TTYDO_HOME_DIR_LENGTH);
-    strncpy(TTYDO_HOME_DIR, home, home_length);
-    strncat(TTYDO_HOME_DIR, "/", 1);
-    strncat(TTYDO_HOME_DIR, TTYDO_FOLDER, ttydo_length);
+    snprintf(TTYDO_HOME_DIR, home_length + ttydo_length + 2, "%s/%s",
+             home, TTYDO_FOLDER);
 
     // use the string to check to see if the directory exists
     struct stat home_stats;
@@ -273,10 +272,8 @@ char* make_task_list_file_path(char* name)
                           sizeof(char));
     
     // copy in the correct fields and return
-    strncat(result, home, home_length);
-    strncat(result, "/", 1);
-    strncat(result, fixed_name, name_length);
-    strncat(result, TTYDO_LIST_SUFFIX, suffix_length);
+    snprintf(result, home_length + name_length + suffix_length + 2, "%s/%s%s",
+             home, fixed_name, TTYDO_LIST_SUFFIX);
 
     // free memory and return
     free(fixed_name);
