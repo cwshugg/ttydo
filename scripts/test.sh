@@ -44,25 +44,25 @@ cd $dir_tests/..
 make test TEST=tests/$1.c
 
 # if the binary wasn't created, quit
-if [ ! -f ./TEST ]; then
+if [ ! -f ./ttydo-test ]; then
     echo -e "${c_red}Compilation failed.${c_none}"
     exit 2
 else
     echo -e "${c_green}Compilation successful.${c_none}"
 fi
 
-# move the 'TEST' binary into ./tests
-mv ./TEST tests/TEST
+# move the 'ttydo-test' binary into ./tests
+mv ./ttydo-test tests/ttydo-test
 
 # execute the test
 echo -e "${c_yellow}Executing test...${c_none}"
 cd tests
 if [ $run_with_valgrind -eq 1 ]; then   # run with valgrind:
-    valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./TEST
+    valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./ttydo-test
 else                                    # run without valgrind:
-    ./TEST
+    ./ttydo-test
 fi
 
 # remove the executable once finished
-rm -f ./TEST
+rm -f ./ttydo-test
 
