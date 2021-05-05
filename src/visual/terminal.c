@@ -20,6 +20,10 @@ int get_terminal_height()
 struct winsize get_window_size_info()
 {
     struct winsize window;
-    ioctl(0, TIOCGWINSZ, &window);
+    if (ioctl(0, TIOCGWINSZ, &window) == -1)
+    {
+        window.ws_row = 0;
+        window.ws_col = 0;
+    }
     return window;
 }

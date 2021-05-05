@@ -9,6 +9,7 @@
 #include "tasklist.h"
 #include "visual/terminal.h"
 #include "visual/bar.h"
+#include "cli/utils.h"
 
 
 // =========================== List Elem Struct ============================ //
@@ -217,6 +218,14 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
 {
     // if we were given a NULL pointer, return NULL
     if (!list) { return NULL; }
+
+    // if 'fill_width' is enabled and the terminal width is too small, we'll
+    // return NULL to indicate failure
+    if (fill_width && get_terminal_width() < BOX_MIN_WIDTH)
+    {
+        eprintf("Terminal size is too small.\n");
+        return NULL;
+    }
 
     // first, we'll count the amount of space we'll need for our inner box
     // string - by summing up each task's to_string() result. We'll also use
