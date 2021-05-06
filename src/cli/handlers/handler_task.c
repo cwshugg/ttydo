@@ -16,6 +16,7 @@ int handle_task_add(Command* comm, int argc, char** args);
 int handle_task_delete(Command* comm, int argc, char** args);
 int handle_task_mark(Command* comm, int argc, char** args);
 int handle_task_view(Command* comm, int argc, char** args);
+int handle_task_edit(Command* comm, int argc, char** args);
 int truncate_string(char* original, char* copy, int max_length);
 Task* find_task(TaskList* list, char* input, char** title);
 int delete_all_tasks(TaskList* list);
@@ -33,7 +34,7 @@ Command* init_command_task()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 5)) { return NULL; }
+    if (command_init_subcommands(result, 6)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_task_help);
@@ -49,6 +50,9 @@ Command* init_command_task()
     result->subcommands[4] = command_new("View", "v", "view",
         "Displays a given task's full title and description.",
         handle_task_view);
+    result->subcommands[5] = command_new("Edit", "e", "edit",
+        "Edits a given tasks name or description.",
+        handle_task_edit);
 
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
@@ -413,6 +417,95 @@ int handle_task_view(Command* comm, int argc, char** args)
 
     // display the found task
     return display_task(task);
+}
+
+// Handles the 'edit' sub-command
+int handle_task_edit(Command* comm, int argc, char** args)
+{
+    // if we don't have any lists, print and return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // if too few arguments were given, print a usage message
+    if (argc < 4)
+    {
+        print_usage("task edit name (n) <LIST> <TASK> <VALUE>");
+        print_usage("task edit description (d) <LIST> <TASK> <VALUE>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n");
+        printf("Where <VALUE> is some string representing the task's new name/description.\n");
+        return 0;
+    }
+
+    // parse out the first argument and use it to determine what specifically
+    // the user wants to edit
+    int edit_code = 0; // 1=name, 2=description
+    if (!strcmp(args[0], "name") || !strcmp(args[0], "n"))
+    { edit_code = 1; }
+    if (!strcmp(args[0], "description") || !strcmp(args[0], "d"))
+    { edit_code = 2; }
+    if (!edit_code)
+    {
+        eprintf("Expected \"name\" (\"n\") or \"description\" (\"d\") as first argument.\n");
+        return 1;
+    }
+
+    // take the next argument and attempt to locate the correct list
+    int tl_index = tasklist_array_find(args[1]);
+    if (tl_index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[1]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 1;
+    }
+    TaskList* list = tasklists[tl_index];
+
+    // if the list has no entries, return
+    if (list->size == 0)
+    {
+        printf("This list has no tasks.\n");
+        return 0;
+    }
+
+    // next, attempt to find the task within the task list (print and return if
+    // the task couldn't be found)
+    char* title = NULL;
+    Task* task = find_task(list, args[2], &title);
+    if (!task)
+    {
+        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
+                list->name, title);
+        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
+                list->size);
+        free(title);
+        return 1;
+    }
+    free(title);
+
+    // get the length of the given value
+    char* value = args[3];
+    int value_length = strlen(value);
+    // adjust the correct field, depending on the edit code
+    if (edit_code == 1)
+    {
+        task->title = realloc(task->title, (value_length + 1) * sizeof(char));
+        snprintf(task->title, value_length + 1, "%s", value);
+    }
+    else if (edit_code == 2)
+    {
+        task->description = realloc(task->description,
+                                    (value_length + 1) * sizeof(char));
+        snprintf(task->description, value_length + 1, "%s", value);
+    }
+    
+    // save the task list
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to disk."); }
+
+    return 0;
 }
 
 
