@@ -127,6 +127,41 @@ int task_list_append(TaskList* list, Task* task)
     return 0;
 }
 
+int task_list_insert(TaskList* list, Task* task, int index)
+{
+    // check for null pointers
+    if (!list || !task) { return 1; }
+    // check for an out-of-bounds index
+    if (index < 0 || index > list->size)
+    { return 1; }
+
+    // if the list is empty OR the index specified is the final index, just
+    // append the task and return
+    if (list->size == 0 || index == list->size)
+    { return task_list_append(list, task); }
+
+    // iterate and find the location of the new task
+    TaskListElem* insert_before = list->head;
+    int i = 0;
+    while (i++ < index && insert_before)
+    { insert_before = insert_before->next; }
+
+    // create a new list element to carry the task (make sure to specify that
+    // it will be placed before the node we just found)
+    TaskListElem* elem = task_list_elem_new(task, insert_before->prev,
+                                            insert_before);
+    // update the appropriate pointers
+    if (insert_before->prev) { insert_before->prev->next = elem; }
+    insert_before->prev = elem;
+
+    // if we just inserted at the head, update the list's head pointer
+    if (index == 0)
+    { list->head = elem; }
+
+    list->size++;
+    return 0;
+}
+
 Task* task_list_get_by_index(TaskList* list, int list_index)
 {
     // if a NULL list pointer was given, return NULL
@@ -223,7 +258,7 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
     // return NULL to indicate failure
     if (fill_width && get_terminal_width() < BOX_MIN_WIDTH)
     {
-        eprintf("Terminal size is too small.\n");
+        fprintf(stderr, "Terminal size is too small.\n");
         return NULL;
     }
 

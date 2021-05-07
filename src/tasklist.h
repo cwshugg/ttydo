@@ -56,6 +56,12 @@ void task_list_free(TaskList* list);
 // otherwise.
 int task_list_append(TaskList* list, Task* task);
 
+// Takes a dynamically-allocated Task pointer and attempts to insert it into
+// the given index of the list. On success, 0 is returned, and 'task' will be
+// placed at index 'index' of the list. Other tasks in the list will be shifted
+// up/down accordingly.
+int task_list_insert(TaskList* list, Task* task, int index);
+
 // Uses the given index to get the Task stored at the corresponding node (as if
 // the linked list was an array). The Task* is returned on success, and NULL
 // is returned on failure.

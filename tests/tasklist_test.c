@@ -29,7 +29,6 @@ int main()
 
     // inserting Tasks into the list
     int task_count = 5;
-    Task* task_array[task_count];
     for (int i = 0; i < task_count; i++)
     {
         char task_name[16];
@@ -39,7 +38,6 @@ int main()
         // create the task and insert it
         Task* task = task_new(task_name, task_desc);
         if (i % 2) { task->is_complete = 1; }
-        task_array[i] = task;
         int failed = task_list_append(l1, task);
         
         char* task_string = task_to_string(task);
@@ -76,13 +74,54 @@ int main()
     box_stack_print(stack2);
     box_stack_free(stack2);
 
+    // INSERT AT HEAD
+    Task* task_insert1 = task_new("Inserted Task 1", "DESCRIPTION");
+    int failed = task_list_insert(l1, task_insert1, 0);
+    if (failed) { fprintf(stderr, "FAILED TO INSERT\n"); }
+    printf("-----\nAfter inserting at head:\nList head: %p\nList tail: %p\nList size: %d\n-----\n",
+           l1->head, l1->tail, l1->size);
+    stack1 = task_list_to_box_stack(l1, 1);
+    box_stack_print(stack1);
+    box_stack_free(stack1);
+
+    // INSERT AT TAIL
+    Task* task_insert2 = task_new("Inserted Task 2", "DESCRIPTION");
+    failed = task_list_insert(l1, task_insert2, l1->size);
+    if (failed) { fprintf(stderr, "FAILED TO INSERT\n"); }
+    printf("-----\nAfter inserting at tail:\nList head: %p\nList tail: %p\nList size: %d\n-----\n",
+           l1->head, l1->tail, l1->size);
+    stack1 = task_list_to_box_stack(l1, 1);
+    box_stack_print(stack1);
+    box_stack_free(stack1);
+
+    // INSERT IN THE MIDDLE
+    Task* task_insert3 = task_new("Inserted Task 3", "DESCRIPTION");
+    failed = task_list_insert(l1, task_insert3, 2);
+    if (failed) { fprintf(stderr, "FAILED TO INSERT\n"); }
+    printf("-----\nAfter inserting in middle:\nList head: %p\nList tail: %p\nList size: %d\n-----\n",
+           l1->head, l1->tail, l1->size);
+    stack1 = task_list_to_box_stack(l1, 1);
+    box_stack_print(stack1);
+    box_stack_free(stack1);
+
+    // get an array of the tasks
+    Task* task_array[l1->size];
+    TaskListElem* elem = l1->head;
+    int elem_index = 0;
+    while (elem_index < l1->size && elem)
+    {
+        task_array[elem_index++] = elem->task;
+        elem = elem->next;
+    }
+
     // create an array of integers from 0..(task_count - 1). Then, shuffle it
-    int indexes[task_count];
-    for (int i = 0; i < task_count; i++) { indexes[i] = i; }
+    int list_size = l1->size;
+    int indexes[list_size];
+    for (int i = 0; i < list_size; i++) { indexes[i] = i; }
     shuffle_int_array(indexes, task_count);
 
     // use the randomized indexes to remove elements from the list
-    for (int i = 0; i < task_count; i++)
+    for (int i = 0; i < list_size; i++)
     {
         int index = indexes[i];
         Task* result = task_list_remove(l1, task_array[index]);

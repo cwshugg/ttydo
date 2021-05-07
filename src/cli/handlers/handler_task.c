@@ -17,6 +17,7 @@ int handle_task_delete(Command* comm, int argc, char** args);
 int handle_task_mark(Command* comm, int argc, char** args);
 int handle_task_view(Command* comm, int argc, char** args);
 int handle_task_edit(Command* comm, int argc, char** args);
+int handle_task_order(Command* comm, int argc, char** args);
 int truncate_string(char* original, char* copy, int max_length);
 Task* find_task(TaskList* list, char* input, char** title);
 int delete_all_tasks(TaskList* list);
@@ -34,7 +35,7 @@ Command* init_command_task()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 6)) { return NULL; }
+    if (command_init_subcommands(result, 7)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_task_help);
@@ -44,15 +45,18 @@ Command* init_command_task()
     result->subcommands[2] = command_new("Delete", "d", "delete",
         "Deletes a task from a task list.",
         handle_task_delete);
-    result->subcommands[3] = command_new("Mark", "m", "mark",
-        "Marks a given task as complete (or incomplete).",
-        handle_task_mark);
-    result->subcommands[4] = command_new("View", "v", "view",
+    result->subcommands[3] = command_new("View", "v", "view",
         "Displays a given task's full title and description.",
         handle_task_view);
+    result->subcommands[4] = command_new("Mark", "m", "mark",
+        "Marks a given task as complete (or incomplete).",
+        handle_task_mark);
     result->subcommands[5] = command_new("Edit", "e", "edit",
         "Edits a given tasks name or description.",
         handle_task_edit);
+    result->subcommands[6] = command_new("Order", "o", "order",
+        "Reorders a given task in its list.",
+        handle_task_order);
 
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
@@ -159,7 +163,7 @@ int handle_task_add(Command* comm, int argc, char** args)
     // if too few arguments were given, print a usage message
     if (argc < 3)
     {
-        print_usage("task add <LIST> \"<TASK_NAME>\" \"<TASK_DESCRIPTION>\"");
+        print_usage("task add <LIST> \"<TASK NAME>\" \"<TASK DESCRIPTION>\"");
         printf("Where <LIST> is either a list's name or number.\n");
         return 0;
     }
@@ -274,76 +278,6 @@ int handle_task_delete(Command* comm, int argc, char** args)
     return 0;
 }
 
-// Handles the 'mark' sub-command
-int handle_task_mark(Command* comm, int argc, char** args)
-{
-    // if we don't have any lists, print and return
-    if (tasklist_array_length == 0)
-    {
-        printf("You don't have any task lists.\n");
-        return 0;
-    }
-
-    // if too few arguments were given, print a usage message
-    if (argc < 2)
-    {
-        print_usage("task mark <LIST> <TASK>");
-        printf("Where <LIST> is either a list's name or number.\n");
-        printf("Where <TASK> is either a task's name or number.\n");
-        // print wildcard info
-        printf("Replacing <TASK> with \"%s\" will mark all tasks as complete. "
-               "If all tasks are already marked as complete, the opposite will happen.\n",
-               WILDCARD_ALL);
-        return 0;
-    }
-
-    // take the first argument and attempt to locate the correct list
-    int tl_index = tasklist_array_find(args[0]);
-    if (tl_index < 0)
-    {
-        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
-        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
-        return 1;
-    }
-    TaskList* list = tasklists[tl_index];
-
-    // if the list has no entries, return
-    if (list->size == 0)
-    {
-        printf("This list has no tasks.\n");
-        return 0;
-    }
-
-    // check for the '*' wildcard
-    if (!strncmp(args[1], WILDCARD_ALL, 1) && strlen(args[1]) == 1)
-    { return mark_all_tasks(list); }
-    
-    // next, attempt to find the task within the task list
-    char* title = NULL;
-    Task* task = find_task(list, args[1], &title);
-
-    // if we didn't find a task, print and return
-    if (!task)
-    {
-        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
-                list->name, title);
-        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
-                list->size);
-        free(title);
-        return 1;
-    }
-    free(title);
-
-    // invert the 'is_complete' flag for the task
-    task->is_complete = !task->is_complete;
-    
-    // save the task list
-    if (save_task_list(list))
-    { fatality(1, "Failed to write to disk."); }
-
-    return 0;
-}
-
 // Handles the 'view' sub-command
 int handle_task_view(Command* comm, int argc, char** args)
 {
@@ -419,6 +353,76 @@ int handle_task_view(Command* comm, int argc, char** args)
     return display_task(task);
 }
 
+// Handles the 'mark' sub-command
+int handle_task_mark(Command* comm, int argc, char** args)
+{
+    // if we don't have any lists, print and return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // if too few arguments were given, print a usage message
+    if (argc < 2)
+    {
+        print_usage("task mark <LIST> <TASK>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n");
+        // print wildcard info
+        printf("Replacing <TASK> with \"%s\" will mark all tasks as complete. "
+               "If all tasks are already marked as complete, the opposite will happen.\n",
+               WILDCARD_ALL);
+        return 0;
+    }
+
+    // take the first argument and attempt to locate the correct list
+    int tl_index = tasklist_array_find(args[0]);
+    if (tl_index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 1;
+    }
+    TaskList* list = tasklists[tl_index];
+
+    // if the list has no entries, return
+    if (list->size == 0)
+    {
+        printf("This list has no tasks.\n");
+        return 0;
+    }
+
+    // check for the '*' wildcard
+    if (!strncmp(args[1], WILDCARD_ALL, 1) && strlen(args[1]) == 1)
+    { return mark_all_tasks(list); }
+    
+    // next, attempt to find the task within the task list
+    char* title = NULL;
+    Task* task = find_task(list, args[1], &title);
+
+    // if we didn't find a task, print and return
+    if (!task)
+    {
+        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
+                list->name, title);
+        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
+                list->size);
+        free(title);
+        return 1;
+    }
+    free(title);
+
+    // invert the 'is_complete' flag for the task
+    task->is_complete = !task->is_complete;
+    
+    // save the task list
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to disk."); }
+
+    return 0;
+}
+
 // Handles the 'edit' sub-command
 int handle_task_edit(Command* comm, int argc, char** args)
 {
@@ -432,8 +436,8 @@ int handle_task_edit(Command* comm, int argc, char** args)
     // if too few arguments were given, print a usage message
     if (argc < 4)
     {
-        print_usage("task edit name (n) <LIST> <TASK> <VALUE>");
-        print_usage("task edit description (d) <LIST> <TASK> <VALUE>");
+        print_usage("task edit name (n) <LIST> <TASK> \"<VALUE>\"");
+        print_usage("task edit description (d) <LIST> <TASK> \"<VALUE>\"");
         printf("Where <LIST> is either a list's name or number.\n");
         printf("Where <TASK> is either a task's name or number.\n");
         printf("Where <VALUE> is some string representing the task's new name/description.\n");
@@ -499,6 +503,97 @@ int handle_task_edit(Command* comm, int argc, char** args)
         task->description = realloc(task->description,
                                     (value_length + 1) * sizeof(char));
         snprintf(task->description, value_length + 1, "%s", value);
+    }
+    
+    // save the task list
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to disk."); }
+
+    return 0;
+}
+
+// Handler for the 'order' sub-command
+int handle_task_order(Command* comm, int argc, char** args)
+{
+    // if we don't have any lists, print and return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // if too few arguments were given, print a usage message
+    if (argc < 3)
+    {
+        print_usage("task order <LIST> <TASK> <POSITION>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n");
+        printf("Positions are numbers, and range from 1 to the list's length.\n");
+        return 0;
+    }
+
+    // take the first argument and attempt to locate the correct list
+    int tl_index = tasklist_array_find(args[0]);
+    if (tl_index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 1;
+    }
+    TaskList* list = tasklists[tl_index];
+
+    // if the list has no entries, return
+    if (list->size == 0)
+    {
+        printf("This list has no tasks.\n");
+        return 0;
+    }
+    
+    // next, attempt to find the task within the task list
+    char* title = NULL;
+    Task* task = find_task(list, args[1], &title);
+    if (!task)
+    {
+        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
+                list->name, title);
+        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
+                list->size);
+        free(title);
+        return 1;
+    }
+    free(title);
+
+    // finally, attempt to convert the given index and check it against the
+    // list's size
+    char* end;
+    int index = (int) strtol(args[2], &end, 10);
+    if (index < 1 || index > list->size + 1)
+    {
+        eprintf("The position must be between %d and %d.\n", 1, list->size + 1);
+        return 1;
+    }
+    index--;
+
+    // determine the task's current index in the list
+    TaskListElem* elem = list->head;
+    int elem_index = 0;
+    while (elem_index++ < list->size && elem)
+    {
+        if (elem->task == task)
+        { break; }
+        elem = elem->next;
+    }
+    // if the task is the last one in the list, and the index request is also
+    // the end of the list, decrement index
+    if (index == list->size)
+    { index--; }
+    
+    // remove the task from the list, then re-insert it at the correct location
+    if (!task_list_remove(list, task) || task_list_insert(list, task, index))
+    {
+        eprintf("Couldn't reorder task \"%s\" within \"%s\".\n",
+                task->title, list->name);
+        return 1;
     }
     
     // save the task list

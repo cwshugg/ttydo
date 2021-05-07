@@ -14,7 +14,7 @@ SOURCE_TEST_DIR=./tests
 SOURCE_ARGS=$(SOURCE_DIR)/*.c $(SOURCE_VISUAL_DIR)/*.c $(SOURCE_CLI_DIR)/*.c $(SOURCE_CLI_HANDLERS_DIR)/*.c
 SOURCE_ARGS_NO_CLI=$(SOURCE_DIR)/*.c $(SOURCE_VISUAL_DIR)/*.c
 # testing
-TEST=you_need_to_specify_a_C_source_file_for_TEST_SOURCE
+TEST=you_need_to_specify_a_C_source_file_for_TEST
 # installation
 INSTALL_LOCATION=/usr/local/bin
 
