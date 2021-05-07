@@ -583,8 +583,7 @@ int handle_task_order(Command* comm, int argc, char** args)
         { break; }
         elem = elem->next;
     }
-    // if the task is the last one in the list, and the index request is also
-    // the end of the list, decrement index
+    // if they requested the end of the list, decrement the index by one
     if (index == list->size)
     { index--; }
     
