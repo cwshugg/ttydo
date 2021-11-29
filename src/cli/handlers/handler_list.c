@@ -192,6 +192,8 @@ int handle_list_delete(Command* comm, int argc, char** args)
     {
         print_usage("list delete <LIST>");
         printf("Where <LIST> is either a list's name or number.\n");
+        printf("Replacing <LIST> with \"%s\" will delete all lists.\n",
+               WILDCARD_ALL);
         return 0;
     }
 
@@ -199,6 +201,26 @@ int handle_list_delete(Command* comm, int argc, char** args)
     if (tasklist_array_length == 0)
     {
         printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // check for the 'ALL' wildcard
+    if (!strncmp(args[0], WILDCARD_ALL, 1) && strlen(args[0]) == 1)
+    {
+        // iterate through all tasklists and remove them (we'll do this in
+        // reverse order, so we dont' have to deal with the indexes of entries
+        // changing when tasklist_array_remove() shifts them up)
+        int result = 0;
+        int length = tasklist_array_length;
+        for (int i = length - 1; i >= 0; i--)
+        { result = result || tasklist_array_remove(i); }
+
+        // if some failure occurred, print and return a non-zero
+        if (result)
+        {
+            eprintf("Failed to delete all task lists.\n");
+            return 1;
+        }
         return 0;
     }
 
