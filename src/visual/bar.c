@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bar.h"
+#include "colors.h"
 
 // ========================== Progress Bar Struct ========================== //
 ProgressBar* progress_bar_new(int pb_width, float pb_percent)
@@ -41,7 +42,11 @@ char* progress_bar_to_string(ProgressBar* bar)
     if (!bar) { return NULL; }
 
     // allocate a new string of the appropriate length
-    char* result = calloc(bar->width * PROGBAR_CHARACTER_SIZE, sizeof(char));
+    char* result = calloc((bar->width * PROGBAR_CHARACTER_SIZE) +
+                          (strlen(C_BAR_FRAME) * 2) +
+                          strlen(C_BAR) +
+                          strlen(C_NONE),
+                          sizeof(char));
     if (!result) { return NULL; }
 
     // --------------- Percentage String --------------- //
@@ -54,11 +59,14 @@ char* progress_bar_to_string(ProgressBar* bar)
 
     // -------------- Progress Bar String -------------- //
     // allocate the local string
-    int bar_string_length = (bar->width - percent_string_length) * PROGBAR_CHARACTER_SIZE + 1;
+    int bar_string_length = (bar->width - percent_string_length) * PROGBAR_CHARACTER_SIZE + 1 +
+                            (strlen(C_BAR_FRAME) * 2) + strlen(C_BAR) + strlen(C_NONE);
     char bar_string[bar_string_length + 1];
     bar_string[bar_string_length] = '\0';
     // copy the left border
-    int length = snprintf(bar_string, 2 + PROGBAR_CHARACTER_SIZE, " %s", PROGBAR_L_BORDER);
+    int length = snprintf(bar_string, 2 + PROGBAR_CHARACTER_SIZE +
+                          strlen(C_BAR_FRAME) + strlen(C_BAR),
+                          C_BAR_FRAME " %s" C_BAR, PROGBAR_L_BORDER);
     // calculate the number of 'filled' slots vs the number of 'empty' slots
     int total_slots = bar->width - percent_string_length - 3;
     int filled_count = (int) ((float) total_slots * bar->percentage);
@@ -72,6 +80,13 @@ char* progress_bar_to_string(ProgressBar* bar)
         }
         else
         {
+            // switch to the bar frame's color when necessary
+            if (i == filled_count)
+            {
+                memmove(bar_string + length, C_BAR_FRAME, strlen(C_BAR_FRAME));
+                length += strlen(C_BAR_FRAME);
+            }
+
             memmove(bar_string + length, PROGBAR_EMPTY, PROGBAR_CHARACTER_SIZE);
             length += PROGBAR_CHARACTER_SIZE;
         }
@@ -79,6 +94,7 @@ char* progress_bar_to_string(ProgressBar* bar)
     // copy the right border
     memmove(bar_string + length, PROGBAR_R_BORDER, PROGBAR_CHARACTER_SIZE);
     length += PROGBAR_CHARACTER_SIZE;
+    memmove(bar_string + length, C_NONE, strlen(C_NONE));
 
     // copy the bar string onto the end string, and return it
     memmove(result + strlen(result), bar_string, length);

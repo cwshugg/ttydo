@@ -5,6 +5,7 @@
 // Module inclusions
 #include <string.h>
 #include "box.h"
+#include "colors.h"
 
 
 // ====================== Helper Function Prototypes ======================= //
@@ -160,7 +161,10 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
     
     // --------- Creating first line --------- //
     // create the first line: it will have corners and horizontal lines
-    lines[0] = calloc(line_width + 1, sizeof(char));
+    lines[0] = calloc(line_width + 
+                      (strlen(C_BOX) * 2) +
+                      (strlen(C_NONE) * 2) + 1,
+                      sizeof(char));
     /* calloc check */ if (!lines[0])
     /* calloc check */ { return free_string_array(lines, 0); }
     // attempt to fill the top line with the title, if it's long enough. If it
@@ -182,7 +186,10 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
     // iterate through indexes 1..(height - 2) and create middle strings
     for (int i = 1; i < height - 1; i++)
     {
-        lines[i] = calloc(line_width + 1, sizeof(char));
+        lines[i] = calloc(line_width +
+                          (strlen(C_BOX) * 2) +
+                          (strlen(C_NONE) * 2) + 1,
+                          sizeof(char));
         /* calloc check */ if (!lines[i])
         /* calloc check */ { return free_string_array(lines, i); }
 
@@ -203,7 +210,10 @@ char** make_box_lines(uint16_t width, uint16_t height, char* title, char* text)
 
     // --------- Creating last line ---------- //    
     // create the last line: it will have corners and horizontal lines
-    lines[height - 1] = calloc(line_width + 1, sizeof(char));
+    lines[height - 1] = calloc(line_width +
+                               strlen(C_BOX) +
+                               strlen(C_NONE) + 1,
+                               sizeof(char));
     /* calloc check */ if (!lines[height - 1])
     /* calloc check */ { return free_string_array(lines, height - 1); }
     fill_box_line(&lines[height - 1], width, BOX_BL_CORNER, BOX_H_LINE, BOX_BR_CORNER);
@@ -229,6 +239,8 @@ void fill_box_line(char** line, int width, char* left_edge,
     int right_length = strlen(right_edge);
 
     // write the left edge
+    memmove(*line + length, C_BOX, strlen(C_BOX));
+    length += strlen(C_BOX);
     memmove(*line + length, left_edge, left_length);
     length += left_length;
 
@@ -238,8 +250,11 @@ void fill_box_line(char** line, int width, char* left_edge,
         memmove(*line + length, middle, middle_length);
         length += middle_length;
     }
+
     // write the right edge
     memmove(*line + length, right_edge, right_length);
+    length += right_length;
+    memmove(*line + length, C_NONE, strlen(C_NONE));
 }
 
 // Helper function that works the same way as 'fill_box_line', but it attempts
@@ -279,12 +294,13 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
         memmove(title_copy, title, title_length);
         title_copy_length += title_length;
     }
-
+    
     // otherwise, fill the string
     int line_length = strlen(*line);
-    line_length += snprintf(*line, strlen(BOX_TL_CORNER) + strlen(BOX_H_LINE) +
-                            title_length + 3, "%s%s %s ",
-                            BOX_TL_CORNER, BOX_H_LINE, title_copy);
+    line_length += snprintf(*line, (strlen(C_BOX) * 2) + strlen(left_edge) +
+                            strlen(BOX_H_LINE) + strlen(C_NONE) + title_length + 3,
+                            C_BOX "%s%s" C_NONE " %s " C_BOX,
+                            left_edge, BOX_H_LINE, title_copy);
     int current_length = title_length + 4;
 
     // fill the remaining spots (except the last) with the middle string
@@ -297,6 +313,7 @@ int fill_box_line_with_title(char** line, int width, char* left_edge,
 
     // fill the final spot with the right edge string
     memmove(*line + line_length, right_edge, strlen(right_edge));
+    memmove(*line + line_length + strlen(right_edge), C_NONE, strlen(C_NONE));
 
     // success - return 0
     return 0;
@@ -314,43 +331,53 @@ int fill_box_line_with_text(char** line, int width, char* left_edge,
 
     // count the number of extended unicode characters in the string
     int text_length = strlen(text);
+    int text_colors_length = count_color_codes(text, text_length);
     int unicode_count = count_string_extended_unicode(text, text_length);
     // if extended unicode characters are present, we need to adjust the text
     // length. Each extended character takes 3 bytes
     if (unicode_count > 0)
     {
         width += 2 * unicode_count;
-        *line = realloc(*line, width * BOX_CHARACTER_SIZE);
+        *line = realloc(*line, (width * BOX_CHARACTER_SIZE) +
+                               (strlen(C_BOX) * 2) +
+                               (strlen(C_NONE) * 2));
     }
 
     // determine how much room there is for the text
     int runoff_length = strlen(BOX_TEXT_RUNOFF);
     int available_length = (width - 2) - runoff_length + 1;
     int copied_text_length = text_length;
-    if (text_length > available_length) { copied_text_length = available_length; }
+    if (text_length - text_colors_length > available_length)
+    { copied_text_length = available_length + text_colors_length; }
 
     // make a local copy of the text of the appropriate length
     char text_copy[copied_text_length + 1];
     snprintf(text_copy, copied_text_length + 1, "%s", text);
     // if we couldn't fit all the text, add the 'runoff indicator' to the end
-    if (text_length > available_length)
+    if (text_length - text_colors_length > available_length)
     {
-        snprintf(text_copy + copied_text_length - runoff_length, runoff_length + 1,
-                 "%s", BOX_TEXT_RUNOFF);
+        snprintf(text_copy + strlen(text_copy) - runoff_length,
+                 runoff_length + 1, "%s", BOX_TEXT_RUNOFF);
+        //snprintf(text_copy + copied_text_length - runoff_length, runoff_length + 1,
+                 //"%s", BOX_TEXT_RUNOFF);
     }
 
     // write the left edge
     int length = strlen(*line);
-    length += snprintf(*line + length, strlen(left_edge) + 2, "%s ", left_edge);
+    length += snprintf(*line + length,
+                       strlen(left_edge) + 2 + strlen(C_BOX) + strlen(C_NONE),
+                       C_BOX "%s " C_NONE, left_edge);
 
     // write the middle characters
     length += snprintf(*line + length, copied_text_length + 1, "%s", text_copy);
     int middle_length = strlen(middle);
-    for (int i = 0; i < width - 4 - copied_text_length; i++)
+    for (int i = 0; i < width - 4 - (copied_text_length - text_colors_length); i++)
     { length += snprintf(*line + length, middle_length + 1, "%s", middle); }
 
     // write the right edge
-    length += snprintf(*line + length, strlen(right_edge) + 2, " %s", right_edge);
+    length += snprintf(*line + length,
+                       strlen(right_edge) + 2 + strlen(C_BOX) + strlen(C_NONE),
+                       C_BOX " %s" C_NONE, right_edge);
 
     return 0;
 }
@@ -464,3 +491,4 @@ int count_string_extended_unicode(char* text, int text_length)
     
     return unicode_count;
 }
+

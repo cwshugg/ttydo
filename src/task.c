@@ -9,6 +9,7 @@
 #include <time.h>
 #include <errno.h>
 #include "task.h"
+#include "visual/colors.h"
 
 // ================ Defines and Helper Function Prototypes ================= //
 #define TASK_COMMA_SCRIBE_STRING "<COMMA>" // when commas appear in task text
@@ -96,16 +97,29 @@ char* task_to_string(Task* task)
     if (task->description) { desc_length = strlen(task->description); }
 
     // allocate a string of the appropriate size
-    int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) + 16;
+    int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) +
+              strlen(C_TASK_CBOX) + strlen(C_NONE) + 16;
+    if (task->is_complete)
+    { pad += strlen(C_TASK_CBOX) + strlen(C_TASK_CBOX_DONE); }
     char* result = calloc(title_length + desc_length + pad, sizeof(char));
     if (!result) { return NULL; }
     int result_length = 0;
 
     // add a "[ ]" or "[X]" to use for a 'task.is_complete' indicator
     if (task->is_complete)
-    { result_length += snprintf(result, 5, "[X] "); }
+    {
+        result_length += snprintf(result,
+                                  5 + (strlen(C_TASK_CBOX) * 2) + strlen(C_TASK_CBOX_DONE) + strlen(C_NONE),
+                                  C_TASK_CBOX "["
+                                  C_TASK_CBOX_DONE "X"
+                                  C_TASK_CBOX "] " C_NONE);
+    }
     else
-    { result_length += snprintf(result, 5, "[ ] "); }
+    {
+        result_length += snprintf(result,
+                                  5 + strlen(C_TASK_CBOX) + strlen(C_NONE),
+                                  C_TASK_CBOX "[ ] " C_NONE);
+    }
 
     // copy the title in
     if (task->title)

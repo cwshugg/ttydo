@@ -35,7 +35,8 @@
 // text-related constants
 #define BOX_TEXT_RUNOFF "..."
 
-// ============================== Box Struct =============================== //// The 'box' struct defines a data structure representing a box to be drawn on
+// ============================== Box Struct =============================== //
+// The 'box' struct defines a data structure representing a box to be drawn on
 // the terminal window.
 typedef struct _Box
 {

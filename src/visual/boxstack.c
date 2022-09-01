@@ -5,6 +5,7 @@
 // Module inclusions
 #include <string.h>
 #include "boxstack.h"
+#include "colors.h"
 
 // =========================== Box Stack Struct ============================ //
 // Constructor: takes in the size of the box stack, and the global width for
@@ -93,8 +94,9 @@ void box_stack_print(BoxStack* stack)
             // boxes.
             if (i > 0 && j == 0)
             {
-                memmove(lines[j], BOX_L_CROSS, strlen(BOX_L_CROSS));
-                memmove(lines[j] + strlen(lines[j]) - strlen(BOX_TR_CORNER),
+                memmove(lines[j], C_BOX, strlen(C_BOX));
+                memmove(lines[j] + strlen(C_BOX), BOX_L_CROSS, strlen(BOX_L_CROSS));
+                memmove(lines[j] + strlen(lines[j]) - (strlen(C_NONE) + strlen(BOX_TR_CORNER)),
                         BOX_R_CROSS, strlen(BOX_R_CROSS));
             }
             fprintf(stdout, "%s\n", lines[j]);
