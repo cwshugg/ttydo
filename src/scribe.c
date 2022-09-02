@@ -15,8 +15,8 @@
 const char* TTYDO_FOLDER = ".ttydo";
 const char* TTYDO_LIST_FOLDER = "lists";
 const char* TTYDO_LIST_SUFFIX = ".tasklist";
-const int TTYDO_HOME_DIR_LENGTH = 1024;
-char TTYDO_HOME_DIR[TTYDO_HOME_DIR_LENGTH] = {'\0'}; // holds the home path
+#define TTYDO_HOME_DIR_LENGTH 1024
+char ttydo_home_dir[TTYDO_HOME_DIR_LENGTH] = {'\0'}; // holds the home path
 // Function prototypes
 char* get_home_directory();
 char* make_task_list_file_path(char* name);
@@ -211,8 +211,8 @@ char* get_home_directory()
 {
     // check to see if the home directory has already been initialized.
     // if so, simply return the string and avoid the expensive operations below
-    if (strlen(TTYDO_HOME_DIR))
-    { return TTYDO_HOME_DIR; }
+    if (strlen(ttydo_home_dir))
+    { return ttydo_home_dir; }
 
     // retrieve the environment variable. If it fails, return NULL
     char* home = getenv("HOME");
@@ -222,25 +222,25 @@ char* get_home_directory()
     // make and get the length of the .ttydo folder string
     int ttydo_length = strlen(TTYDO_FOLDER);
 
-    // ensure TTYDO_HOME_DIR is zeroed out
-    memset(TTYDO_HOME_DIR, 0, TTYDO_HOME_DIR_LENGTH);
-    snprintf(TTYDO_HOME_DIR, home_length + ttydo_length + 2, "%s/%s",
+    // ensure ttydo_home_dir is zeroed out
+    memset(ttydo_home_dir, 0, TTYDO_HOME_DIR_LENGTH);
+    snprintf(ttydo_home_dir, home_length + ttydo_length + 2, "%s/%s",
              home, TTYDO_FOLDER);
 
     // use the string to check to see if the directory exists
     struct stat home_stats;
-    if (stat(TTYDO_HOME_DIR, &home_stats) || !S_ISDIR(home_stats.st_mode))
+    if (stat(ttydo_home_dir, &home_stats) || !S_ISDIR(home_stats.st_mode))
     {
         // attempt to create the directory
-        int make_result = mkdir(TTYDO_HOME_DIR, 0777);
+        int make_result = mkdir(ttydo_home_dir, 0777);
         if (make_result == -1)
         {
             fprintf(stderr, "Internal error: couldn't create home directory: '%s'."
-                    " Try creating the directory manually.\n", TTYDO_HOME_DIR);
+                    " Try creating the directory manually.\n", ttydo_home_dir);
         }
     }
 
-    return TTYDO_HOME_DIR;
+    return ttydo_home_dir;
 }
 
 // Takes in the name of a task list and creates a file to which it will be
