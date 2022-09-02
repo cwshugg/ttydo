@@ -3,3 +3,6 @@ src/ttydo
 ttydo
 ttydo-test
 
+# vim swap files
+*.swp
+

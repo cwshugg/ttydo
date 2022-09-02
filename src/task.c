@@ -98,7 +98,7 @@ char* task_to_string(Task* task)
 
     // allocate a string of the appropriate size
     int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) +
-              strlen(C_TASK_CBOX) + strlen(C_NONE) + 16;
+              strlen(C_TASK_CBOX) + + strlen(C_TASK_TITLE) + (strlen(C_NONE) * 2) + 16;
     if (task->is_complete)
     { pad += strlen(C_TASK_CBOX) + strlen(C_TASK_CBOX_DONE); }
     char* result = calloc(title_length + desc_length + pad, sizeof(char));
@@ -124,8 +124,9 @@ char* task_to_string(Task* task)
     // copy the title in
     if (task->title)
     {
-        result_length += snprintf(result + result_length, title_length + 3,
-                                  "%s: ", task->title);
+        result_length += snprintf(result + result_length,
+                                  title_length + strlen(C_TASK_TITLE) + strlen(C_NONE) + 3,
+                                  C_TASK_TITLE "%s: " C_NONE, task->title);
     }
     else
     {
