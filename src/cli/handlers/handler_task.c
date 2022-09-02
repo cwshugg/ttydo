@@ -45,7 +45,7 @@ Command* init_command_task()
     result->subcommands[2] = command_new("Delete", "d", "delete",
         "Deletes a task from a task list.",
         handle_task_delete);
-    result->subcommands[3] = command_new("View", "v", "view",
+    result->subcommands[3] = command_new("View/Verbose", "v", "view",
         "Displays a given task's full title and description.",
         handle_task_view);
     result->subcommands[4] = command_new("Mark", "m", "mark",
@@ -57,7 +57,7 @@ Command* init_command_task()
     result->subcommands[6] = command_new("Order", "o", "order",
         "Reorders a given task in its list.",
         handle_task_order);
-
+    
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
     {

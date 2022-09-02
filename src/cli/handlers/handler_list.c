@@ -16,6 +16,7 @@ int handle_list_help(Command* comm, int argc, char** args);
 int handle_list_add(Command* comm, int argc, char** args);
 int handle_list_delete(Command* comm, int argc, char** args);
 int handle_list_rename(Command* comm, int argc, char** args);
+int handle_list_view(Command* comm, int argc, char** args);
 int list_name_is_valid(char* name);
 
 
@@ -29,7 +30,7 @@ Command* init_command_list()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 4)) { return NULL; }
+    if (command_init_subcommands(result, 5)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_list_help);
@@ -42,6 +43,9 @@ Command* init_command_list()
     result->subcommands[3] = command_new("Rename", "r", "rename",
         "Renames an existing task list.",
         handle_list_rename);
+    result->subcommands[4] = command_new("View/Verbose", "v", "view",
+        "Displays all tasks in the list, their numbers, and their full descriptions.",
+        handle_list_view);
 
     // check each sub-command - if one wasn't initialized, return NULL
     for (int i = 0; i < result->subcommands_length; i++)
@@ -289,6 +293,50 @@ int handle_list_rename(Command* comm, int argc, char** args)
     free(list->name);
     list->name = strdup(new_name);
     return save_task_list(list);
+}
+
+int handle_list_view(Command* comm, int argc, char** args)
+{
+    // check for the correct command-line arguments
+    if (argc < 1)
+    {
+        print_usage("list view <LIST>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        return 0;
+    }
+
+    // if we don't have any task lists, there's no point
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // attempt to find the index of the matching task list
+    int index = tasklist_array_find(args[0]);
+    if (index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 0;
+    }
+    TaskList* list = tasklists[index];
+    
+    // print the list's title, then iterate across the list's linked elements to
+    // retrieve each task
+    printf("%s\n", list->name);
+    int i = 0;
+    TaskListElem* current = list->head;
+    while (i++ < list->size && current)
+    {
+        char* tstr = task_to_string(current->task);
+        printf("%d. %s\n", i, tstr);
+        free(tstr);
+
+        // move to the next task
+        current = current->next;
+    }
+    return 0;
 }
 
 
