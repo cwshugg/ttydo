@@ -9,6 +9,7 @@
 // Module inclusions
 #include "task.h"
 #include "visual/boxstack.h"
+#include "visual/colors.h"
 
 // ========================== Constants & Macros =========================== //
 #define TASK_LIST_NAME_MAX_LENGTH 64    // maximum character count for a name
@@ -37,10 +38,11 @@ Task* task_list_elem_free(TaskListElem* elem);
 // The 'TaskList' struct represents a list of Tasks.
 typedef struct _TaskLisk
 {
-    char* name;             // name of the task list
-    int size;               // number of tasks in the list
-    TaskListElem* head;     // head node of the linked list
-    TaskListElem* tail;     // the tail node of the linked list
+    char* name;                     // name of the task list
+    int size;                       // number of tasks in the list
+    TaskListElem* head;             // head node of the linked list
+    TaskListElem* tail;             // the tail node of the linked list
+    char color[COLOR_MAX_LENGTH];   // color string
 } TaskList;
 
 // Constructor: dynamically allocates a new TaskList pointer. If allocation
@@ -83,6 +85,9 @@ Task* task_list_remove(TaskList* list, Task* task);
 // entire width is used. If it's 0, the box will be as small as possible while
 // still fitting each task string inside.
 BoxStack* task_list_to_box_stack(TaskList* list, int fill_width);
+
+// Accepts a color name and attempts to update the task list's color.
+void task_list_set_color(TaskList* list, char* name);
 
 
 // ========================== File String Parsing ========================== //

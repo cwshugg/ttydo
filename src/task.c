@@ -68,6 +68,9 @@ Task* task_new(char* title, char* desc)
     // generate an ID for the task using the task description (string hashing)
     task->id = generate_task_id(task->description);    
 
+    // set the default color for the task
+    task_set_color(task, NULL);
+
     // return the Task
     return task;
 }
@@ -98,7 +101,7 @@ char* task_to_string(Task* task)
 
     // allocate a string of the appropriate size
     int pad = strlen(TASK_DEFAULT_TITLE) + strlen(TASK_DEFAULT_DESCRIPTION) +
-              strlen(C_TASK_CBOX) + + strlen(C_TASK_TITLE) + (strlen(C_NONE) * 2) + 16;
+              strlen(C_TASK_CBOX) + strlen(task->color) + (strlen(C_NONE) * 2) + 16;
     if (task->is_complete)
     { pad += strlen(C_TASK_CBOX) + strlen(C_TASK_CBOX_DONE); }
     char* result = calloc(title_length + desc_length + pad, sizeof(char));
@@ -125,8 +128,8 @@ char* task_to_string(Task* task)
     if (task->title)
     {
         result_length += snprintf(result + result_length,
-                                  title_length + strlen(C_TASK_TITLE) + strlen(C_NONE) + 3,
-                                  C_TASK_TITLE "%s: " C_NONE, task->title);
+                                  title_length + strlen(task->color) + strlen(C_NONE) + 3,
+                                  "%s%s: " C_NONE, task->color, task->title);
     }
     else
     {
@@ -148,6 +151,21 @@ char* task_to_string(Task* task)
     }
     
     return result;
+}
+
+void task_set_color(Task* task, char* name)
+{
+    if (!task)
+    { return; }
+
+    // look for a color string matching the name
+    const char* cstr = color_from_name(name);
+
+    // copy the color string into the task struct
+    if (cstr)
+    { snprintf(task->color, COLOR_MAX_LENGTH, "%s", cstr); }
+    else
+    { snprintf(task->color, COLOR_MAX_LENGTH, "%s", C_TASK_TITLE); }
 }
 
 
@@ -311,12 +329,19 @@ char* task_get_scribe_string(Task* task)
     char complete_string[complete_string_max_length];
     snprintf(complete_string, complete_string_max_length, "%d",
             task->is_complete != 0);
+    
+    // convert the task's color to a name string
+    int color_string_max_length = COLOR_NAME_MAX_LENGTH;
+    char color_string[color_string_max_length];
+    const char* color_name = color_to_name(task->color);
+    snprintf(color_string, color_string_max_length, "%s", color_name);
 
     // calculate the lengths of strings
     int id_length = strlen(id_string);
     int complete_length = strlen(complete_string);
     int title_length = strlen(task->title);
     int desc_length = strlen(task->description);
+    int color_length = strlen(color_string);
 
     // adjust the lengths of the title and description to fit their maximum
     // length bounds (TASK_TITLE_MAX_LENGTH, TASK_DESCRIPTION_MAX_LENGTH)
@@ -339,13 +364,14 @@ char* task_get_scribe_string(Task* task)
     desc_length = replace_substring(&task->description, desc_length, ",",
                                     TASK_COMMA_SCRIBE_STRING);
     // compute the total length
-    int total_length = id_length + complete_length + title_length + desc_length;
+    int total_length = id_length + complete_length + title_length +
+                       desc_length + color_length;
 
     // allocate a new string
     int safety_pad = 16;
     char* result = calloc(total_length + safety_pad, sizeof(char));
-    snprintf(result, total_length + safety_pad, "%s,%s,%s,%s", id_string,
-             complete_string, task->title, task->description);
+    snprintf(result, total_length + safety_pad, "%s,%s,%s,%s,%s", id_string,
+             complete_string, task->title, task->description, color_string);
     return result;
 }
 
@@ -415,8 +441,12 @@ Task* task_new_from_scribe_string(char* string)
                           TASK_COMMA_SCRIBE_STRING, ",");
     }
 
+    // ------------- PIECE 5: color ------------- //
+    char* color = strtok(NULL, ",");
+
     // create a new Task* struct and free strings as necessary
     Task* result = task_new(title, description);
+    if (color) { task_set_color(result, color); }
     if (title) { free(title); }
     if (description) { free(description); }
 

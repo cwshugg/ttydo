@@ -16,6 +16,7 @@ int handle_list_help(Command* comm, int argc, char** args);
 int handle_list_add(Command* comm, int argc, char** args);
 int handle_list_delete(Command* comm, int argc, char** args);
 int handle_list_rename(Command* comm, int argc, char** args);
+int handle_list_color(Command* comm, int argc, char** args);
 int handle_list_view(Command* comm, int argc, char** args);
 int list_name_is_valid(char* name);
 
@@ -30,7 +31,7 @@ Command* init_command_list()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 5)) { return NULL; }
+    if (command_init_subcommands(result, 6)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_list_help);
@@ -43,7 +44,10 @@ Command* init_command_list()
     result->subcommands[3] = command_new("Rename", "r", "rename",
         "Renames an existing task list.",
         handle_list_rename);
-    result->subcommands[4] = command_new("View/Verbose", "v", "view",
+    result->subcommands[4] = command_new("Color", "c", "color",
+        "Sets an existing task list's color.",
+        handle_list_color);
+    result->subcommands[5] = command_new("View/Verbose", "v", "view",
         "Displays all tasks in the list, their numbers, and their full descriptions.",
         handle_list_view);
 
@@ -294,6 +298,59 @@ int handle_list_rename(Command* comm, int argc, char** args)
     list->name = strdup(new_name);
     return save_task_list(list);
 }
+
+int handle_list_color(Command* comm, int argc, char** args)
+{
+    if (argc < 2)
+    {
+        print_usage("list color <LIST> <COLOR>");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <COLOR> is the name of the desired color.\n");
+        return 0;
+    }
+
+    // if we don't have any task lists, return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // take the argument and try to find an index of a task list
+    int index = tasklist_array_find(args[0]);
+    if (index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 0;
+    }
+    TaskList* list = tasklists[index];
+
+    // get the length of the given color value
+    char* value = args[1];
+    int value_length = strlen(value);
+
+    // check for a match before setting
+    const char* cstr = color_from_name(value);
+    if (!cstr)
+    {
+        eprintf("Couldn't find a color named \"%s\".\n", value);
+        fprintf(stderr, "The color options are:\n");
+        int ccount = color_count();
+        for (int i = 0; i < ccount; i++)
+        {
+            fprintf(stderr, " - %s%s\n" C_NONE,
+                    color_from_index(i),
+                    color_name_from_index(i));
+        }
+        return 1;
+    }
+
+    // set the color and save
+    task_list_set_color(list, value);
+    return save_task_list(list);
+}
+
 
 int handle_list_view(Command* comm, int argc, char** args)
 {

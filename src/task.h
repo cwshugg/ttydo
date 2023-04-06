@@ -8,6 +8,7 @@
 
 // Module inclusions
 #include <inttypes.h>
+#include "visual/colors.h"
 
 // ========================= Constants and Macros ========================== //
 #define TASK_TITLE_MAX_LENGTH 32    // max number of chars in a title
@@ -21,10 +22,11 @@
 // ============================== Task Struct ============================== //
 typedef struct _Task
 {
-    char* title;            // the title of the task
-    char* description;      // the description of the task
-    uint64_t id;            // unique task ID
-    uint8_t is_complete;        // whether or not the task is finished
+    char* title;                    // the title of the task
+    char* description;              // the description of the task
+    uint64_t id;                    // unique task ID
+    uint8_t is_complete;            // whether or not the task is finished
+    char color[COLOR_MAX_LENGTH];   // color string
 } Task;
 
 // Constructor: dynamically allocates memory for a new 'Task' struct, and
@@ -38,6 +40,10 @@ Task* task_new(char* title, char* desc);
 // Destructor: takes in a pointer to a 'Task' struct and attempts to free the
 // struct's memory.
 void task_free(Task* task);
+
+// Sets the task's color string. If the pointer is NULL, the default color is
+// used instead.
+void task_set_color(Task* task, char* name);
 
 // Takes in a Task struct and attempts to create a dynamically-allocates string
 // that repesents the task. The returned pointer must be freed after it's used.

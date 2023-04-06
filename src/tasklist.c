@@ -62,6 +62,9 @@ TaskList* task_list_new(char* list_name)
     // copy the name into the list's field
     snprintf(list->name, name_length + 1, "%s", list_name);
 
+    // set the default color
+    task_list_set_color(list, NULL);
+
     // initialize the head, tail, and size to be NULL and 0
     list->head = NULL;
     list->tail = NULL;
@@ -321,7 +324,8 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
     int progbar_width = text_box->width - 4;
     if (fill_width) { progbar_width = get_terminal_width() - 4; }
     // create a new progress bar
-    ProgressBar* bar = progress_bar_new(progbar_width, percent_complete);
+    char* color_name = (char*) color_to_name(list->color);
+    ProgressBar* bar = progress_bar_new(progbar_width, percent_complete, color_name);
 
     // modify the second box - this will hold a progress bar
     Box* progress_box = stack->boxes[1];
@@ -341,6 +345,21 @@ BoxStack* task_list_to_box_stack(TaskList* list, int fill_width)
     return stack;
 }
 
+void task_list_set_color(TaskList* list, char* name)
+{
+    if (!list)
+    { return; }
+
+    // search for the color
+    const char* cstr = color_from_name(name);
+
+    // copy the color in, if one was found
+    if (cstr)
+    { snprintf(list->color, COLOR_MAX_LENGTH, "%s", cstr); }
+    else
+    { snprintf(list->color, COLOR_MAX_LENGTH, "%s", C_BAR); }
+}
+
 
 // ========================== File String Parsing ========================== //
 char* task_list_get_scribe_string(TaskList* list)
@@ -352,13 +371,21 @@ char* task_list_get_scribe_string(TaskList* list)
     int name_length = strlen(list->name);
     if (name_length > TASK_LIST_NAME_MAX_LENGTH)
     { name_length = TASK_LIST_NAME_MAX_LENGTH; }
-    int length = name_length + 8;
+    int size_length = 8;
+    int color_length = COLOR_NAME_MAX_LENGTH + 1;
+    int length = name_length + size_length + color_length;
+
     // allocate the string accordingly
     char* result = calloc(length + 1, sizeof(char));
 
     // copy the list name in, then the list size
     snprintf(result, name_length + 1, "%s", list->name);
-    snprintf(result + name_length, length - name_length, ",%d", list->size);
+    int size_wcount = snprintf(result + name_length, size_length, ",%d", list->size);
+    
+    // convert the list's color to a name string and copy it in
+    const char* color_name = color_to_name(list->color);
+    snprintf(result + name_length + size_wcount, color_length, ",%s", color_name);
+
     return result;
 }
 
@@ -367,22 +394,26 @@ TaskList* task_list_new_from_scribe_string(char* string)
     // check for a NULL pointer
     if (!string) { return NULL; }
 
-    // search for the first comma. Everything up to the comma represents the
-    // name of the task list
-    char* comma1 = strstr(string, ",");
-    if (!comma1) { return NULL; }
-    int name_length = comma1 - string;
+    // create a local copy of the string
+    size_t len = strlen(string);
+    char local[len + 1];
+    snprintf(local, len + 1, "%s", string);
+    
+    // look for the first comma. Everything before this is the task list name
+    char* name = strtok(local, ",");
+    if (!name) { return NULL; }
 
-    // adjust the name length as needed (to ensure it's below the maximum)
-    if (name_length > TASK_LIST_NAME_MAX_LENGTH)
-    { name_length = TASK_LIST_NAME_MAX_LENGTH; }
+    // skip over the second string (the size)
+    char* size_str = strtok(NULL, ",");
+    if (!size_str) { return NULL; }
 
-    // copy the name of the task list
-    char name[name_length + 1];
-    snprintf(name, name_length + 1, "%s", string);
-
+    // the third string holds the list's color
+    char* color_name = strtok(NULL, ",");
+    char* cname = strtok(color_name, "\n");
+    
     // create a new TaskList with the name
     TaskList* result = task_list_new(name);
+    task_list_set_color(result, cname);
     if (!result) { return NULL; }
 
     // return the task list

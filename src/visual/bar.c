@@ -10,7 +10,7 @@
 #include "colors.h"
 
 // ========================== Progress Bar Struct ========================== //
-ProgressBar* progress_bar_new(int pb_width, float pb_percent)
+ProgressBar* progress_bar_new(int pb_width, float pb_percent, char* color)
 {
     // adjust inputs, if needed
     if (pb_width < PROGBAR_MIN_WIDTH) { pb_width = PROGBAR_MIN_WIDTH; }
@@ -24,6 +24,13 @@ ProgressBar* progress_bar_new(int pb_width, float pb_percent)
     // fill in the struct fields
     bar->width = pb_width;
     bar->percentage = pb_percent;
+
+    // attempt to find a matching color
+    const char* cstr = color_from_name(color);
+    if (cstr)
+    { snprintf(bar->color, COLOR_MAX_LENGTH, "%s", cstr); }
+    else
+    { snprintf(bar->color, COLOR_MAX_LENGTH, "%s", C_BAR); }
     return bar;
 }
 
@@ -44,7 +51,7 @@ char* progress_bar_to_string(ProgressBar* bar)
     // allocate a new string of the appropriate length
     char* result = calloc((bar->width * PROGBAR_CHARACTER_SIZE) +
                           (strlen(C_BAR_FRAME) * 2) +
-                          strlen(C_BAR) +
+                          strlen(bar->color) +
                           strlen(C_NONE),
                           sizeof(char));
     if (!result) { return NULL; }
@@ -60,13 +67,13 @@ char* progress_bar_to_string(ProgressBar* bar)
     // -------------- Progress Bar String -------------- //
     // allocate the local string
     int bar_string_length = (bar->width - percent_string_length) * PROGBAR_CHARACTER_SIZE + 1 +
-                            (strlen(C_BAR_FRAME) * 2) + strlen(C_BAR) + strlen(C_NONE);
+                            (strlen(C_BAR_FRAME) * 2) + strlen(bar->color) + strlen(C_NONE);
     char bar_string[bar_string_length + 1];
     bar_string[bar_string_length] = '\0';
     // copy the left border
     int length = snprintf(bar_string, 2 + PROGBAR_CHARACTER_SIZE +
-                          strlen(C_BAR_FRAME) + strlen(C_BAR),
-                          C_BAR_FRAME " %s" C_BAR, PROGBAR_L_BORDER);
+                          strlen(C_BAR_FRAME) + strlen(bar->color),
+                          C_BAR_FRAME " %s%s", PROGBAR_L_BORDER, bar->color);
     // calculate the number of 'filled' slots vs the number of 'empty' slots
     int total_slots = bar->width - percent_string_length - 3;
     int filled_count = (int) ((float) total_slots * bar->percentage);

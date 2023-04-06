@@ -6,6 +6,8 @@
 #ifndef BAR_H
 #define BAR_H
 
+#include "colors.h"
+
 // ========================= Constants and Macros ========================== //
 // Progress bar drawing definitions
 // https://www.utf8-chartable.de/unicode-utf8-table.pl?start=9472
@@ -25,6 +27,7 @@ typedef struct _ProgressBar
 {
     int width;          // the total width of the printed bar/percentage
     float percentage;   // the percent the progress bar is full
+    char color[COLOR_MAX_LENGTH]; // the progress bar's color
 } ProgressBar;
 
 // Takes in a width and a percentage and attempts to allocate a new ProgressBar
@@ -32,7 +35,7 @@ typedef struct _ProgressBar
 // returned. If too short of a width is given, it's instead set to
 // PROGBAR_MIN_WIDTH, and if an invalid percentage is given, it's set to 0.0 or
 // 1.0. The percentage is expected as a value between 0.0 and 1.0.
-ProgressBar* progress_bar_new(int pb_width, float pb_percent);
+ProgressBar* progress_bar_new(int pb_width, float pb_percent, char* color);
 
 // Takes in a ProgressBar pointer and attempts to free the memory associated
 // with the progress bar.

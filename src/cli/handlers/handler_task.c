@@ -9,6 +9,7 @@
 #include "handlers.h"
 #include "../utils.h"
 #include "../../scribe.h"
+#include "../../visual/colors.h"
 
 // Function prototypes
 int handle_task_help(Command* comm, int argc, char** args);
@@ -17,6 +18,7 @@ int handle_task_delete(Command* comm, int argc, char** args);
 int handle_task_mark(Command* comm, int argc, char** args);
 int handle_task_view(Command* comm, int argc, char** args);
 int handle_task_edit(Command* comm, int argc, char** args);
+int handle_task_color(Command* comm, int argc, char** args);
 int handle_task_order(Command* comm, int argc, char** args);
 int truncate_string(char* original, char* copy, int max_length);
 Task* find_task(TaskList* list, char* input, char** title);
@@ -35,7 +37,7 @@ Command* init_command_task()
     if (!result) { return NULL; }
     
     // sub-commands
-    if (command_init_subcommands(result, 7)) { return NULL; }
+    if (command_init_subcommands(result, 8)) { return NULL; }
     result->subcommands[0] = command_new("Help", "h", "help",
         "Shows a list of supported sub-commands.",
         handle_task_help);
@@ -52,9 +54,12 @@ Command* init_command_task()
         "Marks a given task as complete (or incomplete).",
         handle_task_mark);
     result->subcommands[5] = command_new("Edit", "e", "edit",
-        "Edits a given tasks name or description.",
+        "Edits a given task's name or description.",
         handle_task_edit);
-    result->subcommands[6] = command_new("Order", "o", "order",
+    result->subcommands[6] = command_new("Color", "c", "color",
+        "Sets a given task's color.",
+        handle_task_color);
+    result->subcommands[7] = command_new("Order", "o", "order",
         "Reorders a given task in its list.",
         handle_task_order);
     
@@ -453,7 +458,8 @@ int handle_task_edit(Command* comm, int argc, char** args)
     { edit_code = 2; }
     if (!edit_code)
     {
-        eprintf("Expected \"name\" (\"n\") or \"description\" (\"d\") as first argument.\n");
+        eprintf("Expected \"name\" (\"n\") or \"description\" (\"d\") "
+                "as first argument.\n");
         return 1;
     }
 
@@ -509,6 +515,87 @@ int handle_task_edit(Command* comm, int argc, char** args)
     if (save_task_list(list))
     { fatality(1, "Failed to write to disk."); }
 
+    return 0;
+}
+
+// Handler for the 'color' sub-command
+int handle_task_color(Command* comm, int argc, char** args)
+{
+    // if we don't have any lists, print and return
+    if (tasklist_array_length == 0)
+    {
+        printf("You don't have any task lists.\n");
+        return 0;
+    }
+
+    // if too few arguments were given, print a usage message
+    if (argc < 3)
+    {
+        print_usage("task color (c) <LIST> <TASK> \"<COLOR>\"");
+        printf("Where <LIST> is either a list's name or number.\n");
+        printf("Where <TASK> is either a task's name or number.\n");
+        printf("Where <COLOR> is the name of color.\n");
+        return 0;
+    }
+
+    // take the first argument and attempt to locate the correct list
+    int tl_index = tasklist_array_find(args[0]);
+    if (tl_index < 0)
+    {
+        eprintf("Couldn't find a task list with name/number \"%s\".\n", args[0]);
+        fprintf(stderr, "Numbers must be between 1 and %d.\n", tasklist_array_length);
+        return 1;
+    }
+    TaskList* list = tasklists[tl_index];
+
+    // if the list has no entries, return
+    if (list->size == 0)
+    {
+        printf("This list has no tasks.\n");
+        return 0;
+    }
+
+    // next, attempt to find the task within the task list
+    char* title = NULL;
+    Task* task = find_task(list, args[1], &title);
+
+    // if we didn't find a task, print and return
+    if (!task)
+    {
+        eprintf("Couldn't find a task within \"%s\" with name/number \"%s\".\n",
+                list->name, title);
+        fprintf(stderr, "Task numbers for this list must be between 1 and %d.\n",
+                list->size);
+        free(title);
+        return 1;
+    }
+    free(title);
+
+    // get the length of the given color value
+    char* value = args[2];
+    int value_length = strlen(value);
+
+    // check for a match before setting
+    const char* cstr = color_from_name(value);
+    if (!cstr)
+    {
+        eprintf("Couldn't find a color named \"%s\".\n", value);
+        fprintf(stderr, "The color options are:\n");
+        int ccount = color_count();
+        for (int i = 0; i < ccount; i++)
+        {
+            fprintf(stderr, " - %s%s\n" C_NONE,
+                    color_from_index(i),
+                    color_name_from_index(i));
+        }
+        return 1;
+    }
+    // set the color
+    task_set_color(task, value);
+    
+    // save the task list
+    if (save_task_list(list))
+    { fatality(1, "Failed to write to disk."); }
     return 0;
 }
 
