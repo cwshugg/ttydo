@@ -11,7 +11,7 @@
 #define C_TASK_CBOX "\033[38;2;100;100;100m"    // task checkbox border color
 #define C_TASK_CBOX_DONE "\033[36m"             // task checkbox "X" indicator
 #define C_TASK_TITLE "\033[38;2;255;255;255m"   // task's title
-#define C_BAR "\033[36m"                        // progress bar
+#define C_BAR "\033[38;2;90;90;90m"             // progress bar
 #define C_BAR_FRAME "\033[38;2;81;81;81m"       // progress bar frame
 
 // Custom colors
