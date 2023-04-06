@@ -31,8 +31,11 @@
 #define C_ACID "\033[38;2;150;255;0m"
 #define C_GREEN "\033[38;2;50;200;50m"
 #define C_FOREST "\033[38;2;50;150;50m"
+#define C_TEAL "\033[38;2;50;175;125m"
 #define C_CYAN "\033[38;2;50;200;200m"
+#define C_SEA "\033[38;2;125;225;225m"
 #define C_SKY "\033[38;2;150;200;255m"
+#define C_RAIN "\033[38;2;100;175;255m"
 #define C_BLUE "\033[38;2;50;150;255m"
 #define C_INDIGO "\033[38;2;50;100;200m"
 #define C_VIOLET "\033[38;2;160;100;255m"
@@ -41,7 +44,7 @@
 #define C_PINK "\033[38;2;255;150;255m"
 
 // Other definitions
-#define COLORS_MAX 32                           // max number of allowed colors
+#define COLORS_MAX 64                           // max number of allowed colors
 #define COLOR_MAX_LENGTH 64                     // max length of color code
 #define COLOR_NAME_MAX_LENGTH 64                // max length of color name
 

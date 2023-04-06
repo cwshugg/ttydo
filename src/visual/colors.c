@@ -35,8 +35,11 @@ static const char* colors[] = {
     C_ACID,
     C_GREEN,
     C_FOREST,
+    C_TEAL,
     C_CYAN,
+    C_SEA,
     C_SKY,
+    C_RAIN,
     C_BLUE,
     C_INDIGO,
     C_VIOLET,
@@ -71,8 +74,11 @@ static const char* color_names[] = {
     "acid",
     "green",
     "forest",
+    "teal",
     "cyan",
+    "sea",
     "sky",
+    "rain",
     "blue",
     "indigo",
     "violet",
@@ -80,7 +86,7 @@ static const char* color_names[] = {
     "lavender",
     "pink"
 };
-static const int colors_len = 31;
+static const int colors_len = 34;
 
 // File-scope global defining *unique* color strings. Used for searching strings
 // for colors.
