@@ -20,13 +20,21 @@ static const char* colors[] = {
 
     // custom colors
     C_WHITE,
+    C_MUD,
+    C_CLAY,
+    C_MAROON,
     C_CRIMSON,
     C_RED,
+    C_MAGMA,
     C_ORANGE,
+    C_BRASS,
     C_GOLD,
     C_YELLOW,
+    C_LEMON,
     C_LIME,
+    C_ACID,
     C_GREEN,
+    C_FOREST,
     C_CYAN,
     C_SKY,
     C_BLUE,
@@ -48,13 +56,21 @@ static const char* color_names[] = {
 
     // custom colors
     "white",
+    "mud",
+    "clay",
+    "maroon",
     "crimson",
     "red",
+    "magma",
     "orange",
+    "brass",
     "gold",
     "yellow",
+    "lemon",
     "lime",
+    "acid",
     "green",
+    "forest",
     "cyan",
     "sky",
     "blue",
@@ -64,7 +80,7 @@ static const char* color_names[] = {
     "lavender",
     "pink"
 };
-static const int colors_len = 23;
+static const int colors_len = 31;
 
 // File-scope global defining *unique* color strings. Used for searching strings
 // for colors.
